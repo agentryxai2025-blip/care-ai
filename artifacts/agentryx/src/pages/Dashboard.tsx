@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import {
   Users, Briefcase, FileText, CreditCard, ShieldAlert, Zap,
   TrendingUp, Clock, ArrowRight, Activity, Plus
 } from "lucide-react";
+import RequestWizard from "@/components/RequestWizard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -70,8 +72,17 @@ const urgencyColors: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const [wizardOpen, setWizardOpen] = useState(false);
+
   return (
     <div className="p-6 space-y-6">
+      {/* Request Wizard */}
+      <RequestWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={() => setWizardOpen(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -79,11 +90,9 @@ export default function Dashboard() {
           <p className="text-sm text-muted-foreground">Harbour Care Services · May 2, 2026</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/requests" data-testid="btn-new-request">
-            <Button size="sm" variant="outline">
-              <Plus className="w-4 h-4 mr-1.5" /> New Request
-            </Button>
-          </Link>
+          <Button size="sm" variant="outline" data-testid="btn-new-request" onClick={() => setWizardOpen(true)}>
+            <Plus className="w-4 h-4 mr-1.5" /> New Request
+          </Button>
           <Link href="/participants" data-testid="btn-add-participant">
             <Button size="sm" variant="outline">
               <Users className="w-4 h-4 mr-1.5" /> Add Participant

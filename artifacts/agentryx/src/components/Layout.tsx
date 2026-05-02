@@ -19,7 +19,15 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
-const navGroups = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
+};
+
+const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Main",
     items: [
@@ -45,7 +53,7 @@ const navGroups = [
   {
     label: "Compliance",
     items: [
-      { href: "/compliance", label: "Compliance", icon: ShieldCheck, badge: "2", badgeVariant: "destructive" as const },
+      { href: "/compliance", label: "Compliance", icon: ShieldCheck, badge: "2", badgeVariant: "destructive" },
     ],
   },
   {

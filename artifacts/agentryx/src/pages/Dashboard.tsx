@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link } from "wouter";
 import {
   Users, Briefcase, FileText, CreditCard, ShieldAlert, Zap,
-  TrendingUp, Clock, ArrowRight, Activity, Plus, Sparkles
+  TrendingUp, Clock, ArrowRight, Activity, Plus
 } from "lucide-react";
+import { AISparkle } from "@/components/AIBadge";
 import RequestWizard from "@/components/RequestWizard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,7 +109,12 @@ export default function Dashboard() {
 
       {/* AI Engine status banner */}
       <div className="flex items-center gap-3 px-4 py-2.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg">
-        <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400 flex-shrink-0" />
+        <AISparkle
+          className="w-4 h-4 flex-shrink-0"
+          title="CareAffinity Engine"
+          tooltip="Auto-matches 71% of care requests without staff intervention — average match time 4 seconds vs 45 minutes manually. Every auto-approval clears a Bayesian confidence threshold before a booking is confirmed."
+          side="bottom"
+        />
         <span className="text-sm text-violet-900 dark:text-violet-300">
           <span className="font-semibold">CareAffinity Engine</span> — Assisted mode · Confidence threshold 0.78 · 71% auto-approved today
         </span>

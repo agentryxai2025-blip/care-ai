@@ -432,7 +432,12 @@ export default function RequestWizard({ open, onClose, onComplete }: Props) {
                     <h3 className="text-base font-bold text-foreground">
                       {matchingDone ? "Match Found!" : "CareAffinity Engine Running"}
                     </h3>
-                    {!matchingDone && <AIBadge pulse />}
+                    {!matchingDone && (
+                      <AIBadge
+                        pulse
+                        tooltip="Scanning 89 active providers in real-time — applying the 8-feature affinity model to rank by proximity, skill match, availability, pricing, ratings, and care history to surface the ideal match in seconds."
+                      />
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {matchingDone

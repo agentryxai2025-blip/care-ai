@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Play, ChevronRight, Info, TrendingUp, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { CareAffinityIcon } from "@/components/CareAffinityIcon";
-import { AIBadge, AIIcon } from "@/components/AIBadge";
+import { AIBadge, AISparkle } from "@/components/AIBadge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -29,6 +29,15 @@ const pipelineStages = [
   { id: 6, name: "Explainability", shortDesc: "Generate rationale", desc: "Generate human-readable rationale per candidate using templated explainer with feature values. Required for every match — no unexplained result.", icon: "06",
     active: { border: "border-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", badge: "bg-emerald-500 text-white", text: "text-emerald-700 dark:text-emerald-300", dot: "bg-emerald-500" },
   },
+];
+
+const STAGE_AI_TOOLTIPS: (string | null)[] = [
+  null,
+  null,
+  "AI scores 8 raw features per candidate: proximity, skill match, availability fit, pricing alignment, participant rating, reliability index, response speed, and prior engagement signal — creating a multi-dimensional fingerprint for each provider.",
+  "Weighted vector scoring (Σ Wᵢ × Fᵢ) applies trained importance weights to each feature. Weights are refined continuously on 12,000+ completed NDIS bookings — amplifying what actually predicts great care outcomes.",
+  "Bayesian calibration converts raw scores into true probability estimates. '91% confidence' is genuinely 91% certainty of a good match — not just a relative ranking — so every auto-approval clears a real statistical bar.",
+  "SHAP value analysis generates a plain-English rationale for every AI decision. Any match can be fully explained to participants, providers, families, or NDIS Quality & Safeguards Commission auditors.",
 ];
 
 const matchResults = [
@@ -137,7 +146,7 @@ export default function Matching() {
         <div>
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <CareAffinityIcon className="w-6 h-6" /> CareAffinity Engine
-            <AIBadge size="md" />
+            <AIBadge size="md" tooltip="Multi-factor affinity scoring across 8 weighted dimensions — trained on 12,000+ successful NDIS bookings. Replaces manual ops matching that averaged 45 minutes per request with a 4-second AI decision." />
           </h1>
           <p className="text-sm text-muted-foreground">Participant–Provider Intelligence — Load-Bearing Component</p>
         </div>
@@ -218,11 +227,16 @@ export default function Matching() {
 
                     {/* AI indicator on AI-driven stages (3–6) */}
                     {i >= 2 && (
-                      <div className="mt-1.5">
-                        <AIIcon className={cn(
-                          "w-3 h-3 mx-auto transition-colors duration-300",
-                          isActive ? "text-violet-500" : isDone ? "text-violet-400" : "text-muted-foreground/25"
-                        )} />
+                      <div className="mt-1.5 flex justify-center">
+                        <AISparkle
+                          tooltip={STAGE_AI_TOOLTIPS[i] ?? undefined}
+                          title={stage.name}
+                          side="top"
+                          className={cn(
+                            "w-3 h-3 transition-colors duration-300",
+                            isActive ? "text-violet-500" : isDone ? "text-violet-400" : "text-muted-foreground/25"
+                          )}
+                        />
                       </div>
                     )}
 

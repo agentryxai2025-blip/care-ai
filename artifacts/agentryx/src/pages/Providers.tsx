@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Search, Briefcase, Star, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Search, Briefcase, Star, ChevronRight, LayoutGrid, List, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import AddProviderWizard from "@/components/AddProviderWizard";
 
 const providers = [
   { id: "PR001", name: "Maria Santos", tier: "Advanced", skills: ["Personal Care", "Manual Handling", "Mental Health First Aid"], rating: 4.9, reliability: 97, screening: "Current", availability: "Available", suburb: "Newtown", total_bookings: 347, response_time: "18 min" },
@@ -49,15 +50,21 @@ export default function Providers() {
   const [tierFilter, setTierFilter] = useState("all");
   const [availFilter, setAvailFilter] = useState("all");
   const [view, setView] = useState<"list" | "card">("list");
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [list, setList] = useState(providers);
 
-  const filtered = providers.filter((p) => {
+  const filtered = list.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.suburb.toLowerCase().includes(search.toLowerCase()) ||
-      p.skills.some(s => s.toLowerCase().includes(search.toLowerCase()));
+      p.skills.some((s: string) => s.toLowerCase().includes(search.toLowerCase()));
     const matchTier = tierFilter === "all" || p.tier === tierFilter;
     const matchAvail = availFilter === "all" || p.availability === availFilter;
     return matchSearch && matchTier && matchAvail;
   });
+
+  const handleProviderAdded = (p: any) => {
+    setList(prev => [p, ...prev]);
+  };
 
   return (
     <div className="p-6 space-y-4">
@@ -66,8 +73,8 @@ export default function Providers() {
           <h1 className="text-xl font-bold text-foreground">Providers</h1>
           <p className="text-sm text-muted-foreground">{providers.length} registered · {providers.filter(p => p.availability === "Available").length} available now</p>
         </div>
-        <Button size="sm" data-testid="btn-add-provider">
-          <Briefcase className="w-4 h-4 mr-1.5" /> Add Provider
+        <Button size="sm" data-testid="btn-add-provider" onClick={() => setWizardOpen(true)}>
+          <Plus className="w-4 h-4 mr-1.5" /> Add Provider
         </Button>
       </div>
 
@@ -192,6 +199,12 @@ export default function Providers() {
           ))}
         </div>
       )}
+
+      <AddProviderWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={handleProviderAdded}
+      />
     </div>
   );
 }

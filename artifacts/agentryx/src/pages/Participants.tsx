@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Search, Filter, LayoutGrid, List, Users, ArrowRight, ChevronRight } from "lucide-react";
+import { Search, LayoutGrid, List, Users, ChevronRight, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AddParticipantWizard from "@/components/AddParticipantWizard";
 
 const participants = [
   { id: "P001", name: "Margaret Chen", ndis_number: "430218967", plan_type: "Plan-managed", support_coordinator: "Helen Marsh", plan_budget_total: 68500, plan_budget_spent: 41200, status: "Active", preferences: { language: "English/Mandarin", gender_pref: "Female", accessibility_needs: "Wheelchair access" }, suburb: "Newtown", age: 52 },
@@ -40,8 +40,10 @@ export default function Participants() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
   const [view, setView] = useState<"list" | "card">("list");
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [list, setList] = useState(participants);
 
-  const filtered = participants.filter((p) => {
+  const filtered = list.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.ndis_number.includes(search) || p.suburb.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || p.status === statusFilter;
@@ -51,6 +53,10 @@ export default function Participants() {
 
   const utilizationPct = (p: typeof participants[0]) => Math.round((p.plan_budget_spent / p.plan_budget_total) * 100);
 
+  const handleParticipantAdded = (p: any) => {
+    setList(prev => [p, ...prev]);
+  };
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -58,8 +64,8 @@ export default function Participants() {
           <h1 className="text-xl font-bold text-foreground">Participants</h1>
           <p className="text-sm text-muted-foreground">{participants.length} registered · {participants.filter(p => p.status === "Active").length} active</p>
         </div>
-        <Button size="sm" data-testid="btn-add-participant">
-          <Users className="w-4 h-4 mr-1.5" /> Add Participant
+        <Button size="sm" data-testid="btn-add-participant" onClick={() => setWizardOpen(true)}>
+          <Plus className="w-4 h-4 mr-1.5" /> Add Participant
         </Button>
       </div>
 
@@ -209,6 +215,12 @@ export default function Participants() {
           <p className="text-sm">No participants found</p>
         </div>
       )}
+
+      <AddParticipantWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={handleParticipantAdded}
+      />
     </div>
   );
 }

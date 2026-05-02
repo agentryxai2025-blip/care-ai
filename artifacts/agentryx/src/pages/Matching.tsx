@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Play, ChevronRight, Info, TrendingUp, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { Play, ChevronRight, Info, TrendingUp, ArrowUp, ArrowDown, Minus, SkipForward, Gauge } from "lucide-react";
 import { CareAffinityIcon } from "@/components/CareAffinityIcon";
 import { AIBadge, AISparkle } from "@/components/AIBadge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -86,9 +86,20 @@ const automationLevels = [
   { value: "full_auto", label: "Full Auto", desc: "Always auto-book. Console handles exceptions only." },
 ];
 
+type SimSpeed = "slow" | "normal" | "fast" | "step";
+
+const SPEEDS: Record<SimSpeed, { label: string; ms: number; desc: string }> = {
+  slow:   { label: "0.5×", ms: 1800, desc: "Slow — 1 stage every 1.8 s" },
+  normal: { label: "1×",   ms: 900,  desc: "Normal — 1 stage every 0.9 s" },
+  fast:   { label: "2×",   ms: 400,  desc: "Fast — 1 stage every 0.4 s" },
+  step:   { label: "Step", ms: 0,    desc: "Step — advance one stage at a time manually" },
+};
+
 export default function Matching() {
   const [activeStage, setActiveStage] = useState(0);
   const [running, setRunning] = useState(false);
+  const [simStarted, setSimStarted] = useState(false);
+  const [speed, setSpeed] = useState<SimSpeed>("normal");
   const [liveScores, setLiveScores] = useState(STAGE_SCORES[0]);
   const [automationLevel, setAutomationLevel] = useState("assisted");
   const [confidenceThreshold, setConfidenceThreshold] = useState([0.75]);
@@ -99,28 +110,44 @@ export default function Matching() {
     setLiveScores(STAGE_SCORES[Math.min(activeStage, 5)]);
   }, [activeStage]);
 
+  // Auto-advance interval — disabled in step mode
   useEffect(() => {
-    if (!running) return;
+    if (!running || speed === "step") return;
     const interval = setInterval(() => {
       setActiveStage(prev => {
         if (prev >= 5) { setRunning(false); return prev; }
         return prev + 1;
       });
-    }, 900);
+    }, SPEEDS[speed].ms);
     return () => clearInterval(interval);
-  }, [running]);
+  }, [running, speed]);
 
   const runSimulation = () => {
     setActiveStage(0);
     setLiveScores(STAGE_SCORES[0]);
     setRunning(true);
+    setSimStarted(true);
   };
 
   const resetSimulation = () => {
     setActiveStage(0);
     setLiveScores(STAGE_SCORES[0]);
     setRunning(false);
+    setSimStarted(false);
   };
+
+  // Step mode: advance one stage at a time
+  const stepForward = () => {
+    setActiveStage(prev => {
+      if (prev >= 5) { setRunning(false); return prev; }
+      const next = prev + 1;
+      if (next >= 5) setRunning(false);
+      return next;
+    });
+  };
+
+  const isStepMode = speed === "step";
+  const canStep = isStepMode && simStarted && activeStage < 5;
 
   const afterFilter = providerPool - pipelineStages[1].filtered!;
 
@@ -150,10 +177,54 @@ export default function Matching() {
           </h1>
           <p className="text-sm text-muted-foreground">Participant–Provider Intelligence — Load-Bearing Component</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {/* Speed segmented control */}
+          <div className="flex items-center border border-border rounded-lg overflow-hidden bg-muted/30">
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium px-2 border-r border-border">
+              <Gauge className="w-3 h-3" /> Speed
+            </span>
+            {(["slow", "normal", "fast", "step"] as SimSpeed[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSpeed(s)}
+                title={SPEEDS[s].desc}
+                className={cn(
+                  "text-xs px-2.5 py-1.5 font-semibold transition-colors border-r border-border last:border-r-0",
+                  speed === s
+                    ? s === "step"
+                      ? "bg-violet-600 text-white"
+                      : "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                )}
+              >
+                {SPEEDS[s].label}
+              </button>
+            ))}
+          </div>
+
           <Button size="sm" variant="outline" onClick={resetSimulation} data-testid="btn-reset">Reset</Button>
-          <Button size="sm" onClick={runSimulation} disabled={running} data-testid="btn-run-simulation">
-            <Play className="w-3.5 h-3.5 mr-1.5" /> {running ? "Running..." : "Run Simulation"}
+
+          {/* Step mode: manual advance button */}
+          {canStep && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={stepForward}
+              className="border-violet-300 text-violet-700 dark:border-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+              data-testid="btn-step-forward"
+            >
+              <SkipForward className="w-3.5 h-3.5 mr-1.5" /> Next Step
+            </Button>
+          )}
+
+          <Button
+            size="sm"
+            onClick={runSimulation}
+            disabled={running && !isStepMode}
+            data-testid="btn-run-simulation"
+          >
+            <Play className="w-3.5 h-3.5 mr-1.5" />
+            {running && !isStepMode ? "Running..." : "Run Simulation"}
           </Button>
         </div>
       </div>

@@ -1,0 +1,280 @@
+import { useState, useEffect } from "react";
+import { Cpu, Play, Pause, ChevronRight, Info } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
+const pipelineStages = [
+  { id: 1, name: "Intake Normalisation", desc: "Convert request to canonical match query (location, service category, schedule, urgency, accessibility, language, gender preference).", icon: "01", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+  { id: 2, name: "Hard Filters", desc: "Eliminate providers that don't meet mandatory criteria: NDIS registration tier, worker screening status, availability, radius, language, gender preference.", icon: "02", color: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400", filtered: 71 },
+  { id: 3, name: "Feature Extraction", desc: "For each candidate: distance, skill match score, availability fit, price vs. reasonable rate, rating, reliability, response speed, repeat-with-participant signal, cultural fit.", icon: "03", color: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400" },
+  { id: 4, name: "Scoring", desc: "Apply tenant weight vector to normalised features. Output: Score = Σ(Wᵢ × Fᵢ). Weights are tenant-configurable below.", icon: "04", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+  { id: 5, name: "Confidence Score", desc: "Weighted blend of: data completeness (25%), score gap to runner-up (30%), historical accuracy (30%), provider freshness (15%).", icon: "05", color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" },
+  { id: 6, name: "Explainability", desc: "Generate human-readable rationale per candidate using templated explainer with feature values. Required for every match — no unexplained result.", icon: "06", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+];
+
+const matchResults = [
+  { rank: 1, provider: "Maria Santos", score: 92, confidence: 0.91, distance: "3.2 km", rating: 4.9, bookings: 47, response_time: "18 min", rationale: "3.2 km from participant, available within 2 hours, 4.9★ from 47 bookings, 12 successful sessions with similar participants, has Mental Health First Aid certification, female (matches participant preference).", features: { distance: 95, skill_match: 100, availability: 90, price: 85, rating: 98, reliability: 97, response_speed: 88, repeat_signal: 92 } },
+  { rank: 2, provider: "Fatima Al-Hassan", score: 85, confidence: 0.82, distance: "5.1 km", rating: 4.9, bookings: 121, response_time: "10 min", rationale: "5.1 km from participant, highly reliable (98%), 4.9★ from 121 bookings, cultural and language match, complex care experience.", features: { distance: 78, skill_match: 95, availability: 88, price: 85, rating: 98, reliability: 98, response_speed: 95, repeat_signal: 60 } },
+  { rank: 3, provider: "Sophie Laurent", score: 76, confidence: 0.68, distance: "4.7 km", rating: 4.7, bookings: 38, response_time: "28 min", rationale: "4.7 km from participant, available in schedule window, 4.7★ rating, certified in manual handling, female worker.", features: { distance: 82, skill_match: 80, availability: 75, price: 90, rating: 94, reliability: 94, response_speed: 72, repeat_signal: 20 } },
+  { rank: 4, provider: "Emma Thornton", score: 61, confidence: 0.54, distance: "2.8 km", rating: 4.3, bookings: 12, response_time: "55 min", rationale: "2.8 km from participant (closest), but limited experience, slower response, screening expiring soon.", features: { distance: 98, skill_match: 70, availability: 65, price: 88, rating: 86, reliability: 85, response_speed: 50, repeat_signal: 0 } },
+  { rank: 5, provider: "Isabella Cruz", score: 58, confidence: 0.49, distance: "9.3 km", rating: 4.5, bookings: 47, response_time: "35 min", rationale: "9.3 km from participant, limited availability in window, no prior experience with this participant type.", features: { distance: 55, skill_match: 72, availability: 60, price: 86, rating: 90, reliability: 90, response_speed: 68, repeat_signal: 0 } },
+];
+
+const weights = [
+  { key: "distance", label: "Proximity", value: 20 },
+  { key: "skill_match", label: "Skill Match", value: 25 },
+  { key: "availability", label: "Availability Fit", value: 15 },
+  { key: "price", label: "Price vs Rate", value: 10 },
+  { key: "rating", label: "Participant Rating", value: 15 },
+  { key: "reliability", label: "Reliability", value: 10 },
+  { key: "response_speed", label: "Response Speed", value: 3 },
+  { key: "repeat_signal", label: "Repeat Signal", value: 2 },
+];
+
+const automationLevels = [
+  { value: "manual", label: "Manual", desc: "Top 3-5 surfaced in Ops Console. Staff picks." },
+  { value: "assisted", label: "Assisted", desc: "Top 1 surfaced with one-click approve. Staff approves." },
+  { value: "auto_review", label: "Auto with Review", desc: "If confidence ≥ threshold: auto-book. Else: route to console." },
+  { value: "full_auto", label: "Full Auto", desc: "Always auto-book. Console handles exceptions only." },
+];
+
+const featureLabels = ["Distance", "Skill Match", "Availability", "Price", "Rating", "Reliability", "Speed", "Repeat"];
+
+export default function Matching() {
+  const [activeStage, setActiveStage] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [automationLevel, setAutomationLevel] = useState("assisted");
+  const [confidenceThreshold, setConfidenceThreshold] = useState([0.75]);
+  const [providerPool, setProviderPool] = useState(89);
+
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      setActiveStage(prev => {
+        if (prev >= 5) { setRunning(false); return prev; }
+        return prev + 1;
+      });
+    }, 900);
+    return () => clearInterval(interval);
+  }, [running]);
+
+  const runSimulation = () => {
+    setActiveStage(0);
+    setRunning(true);
+  };
+
+  const afterFilter = providerPool - pipelineStages[1].filtered!;
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-primary" /> AI Matching Engine
+          </h1>
+          <p className="text-sm text-muted-foreground">Matching & Confidence Engine — Load-Bearing Component</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => { setActiveStage(0); setRunning(false); }} data-testid="btn-reset">Reset</Button>
+          <Button size="sm" onClick={runSimulation} disabled={running} data-testid="btn-run-simulation">
+            <Play className="w-3.5 h-3.5 mr-1.5" /> {running ? "Running..." : "Run Simulation"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Pipeline visualization */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold">6-Stage Matching Pipeline</CardTitle>
+          <CardDescription className="text-xs">REQ-2847 · Margaret Chen · Personal Care · Priority</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
+              {pipelineStages.map((stage, i) => {
+                const isActive = activeStage === i;
+                const isDone = activeStage > i;
+                return (
+                  <div key={stage.id} className="flex items-center">
+                    <div
+                      className={cn(
+                        "flex flex-col items-center p-3 rounded-lg border-2 min-w-36 transition-all duration-500 cursor-pointer",
+                        isActive && "border-primary shadow-md",
+                        isDone && "border-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10",
+                        !isActive && !isDone && "border-border bg-card"
+                      )}
+                      onClick={() => setActiveStage(i)}
+                      data-testid={`pipeline-stage-${i + 1}`}
+                    >
+                      <div className={`text-[10px] font-bold px-2 py-0.5 rounded mb-2 ${stage.color}`}>{stage.icon}</div>
+                      <div className="text-xs font-semibold text-foreground text-center">{stage.name}</div>
+                      {stage.filtered && isDone && (
+                        <div className="text-[10px] text-red-600 mt-1 font-medium">-{stage.filtered} filtered</div>
+                      )}
+                      {isDone && !stage.filtered && (
+                        <div className="text-[10px] text-emerald-600 mt-1 font-medium">Done</div>
+                      )}
+                      {isActive && <div className="w-3 h-3 rounded-full bg-primary animate-pulse mt-1" />}
+                    </div>
+                    {i < pipelineStages.length - 1 && (
+                      <ChevronRight className={`w-4 h-4 mx-1 flex-shrink-0 transition-colors ${isDone ? "text-emerald-500" : "text-muted-foreground/30"}`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {activeStage >= 0 && activeStage < 6 && (
+              <div className="mt-4 p-3 bg-muted/40 rounded-lg border border-border">
+                <div className="flex items-start gap-2">
+                  <Info className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-xs font-semibold text-foreground mb-0.5">{pipelineStages[activeStage].name}</div>
+                    <div className="text-xs text-muted-foreground">{pipelineStages[activeStage].desc}</div>
+                    {activeStage === 1 && (
+                      <div className="mt-1.5 text-xs">
+                        <span className="text-muted-foreground">Provider pool: </span>
+                        <span className="font-semibold text-foreground">{providerPool}</span>
+                        <span className="text-muted-foreground"> → after filters: </span>
+                        <span className="font-semibold text-foreground">{afterFilter}</span>
+                        <span className="text-red-600 ml-1">({pipelineStages[1].filtered} eliminated)</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        {/* Config panel */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold">Engine Configuration</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div>
+              <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Automation Level</div>
+              <Select value={automationLevel} onValueChange={setAutomationLevel}>
+                <SelectTrigger data-testid="automation-level-select"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {automationLevels.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1.5">{automationLevels.find(l => l.value === automationLevel)?.desc}</p>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
+                <span>Confidence Threshold</span>
+                <span className="text-primary font-bold">{confidenceThreshold[0].toFixed(2)}</span>
+              </div>
+              <Slider
+                data-testid="confidence-threshold-slider"
+                value={confidenceThreshold}
+                onValueChange={setConfidenceThreshold}
+                min={0} max={1} step={0.01}
+                className="w-full"
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <span>0.0 (permissive)</span><span>1.0 (strict)</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Weight Vector (tenant-tuned)</div>
+              <div className="space-y-2.5">
+                {weights.map(w => (
+                  <div key={w.key}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-muted-foreground">{w.label}</span>
+                      <span className="font-semibold text-foreground">{w.value}%</span>
+                    </div>
+                    <Progress value={w.value * 4} className="h-1" />
+                  </div>
+                ))}
+                <div className="text-[10px] text-muted-foreground pt-1 border-t border-border">Total: 100% (normalised)</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Match results */}
+        <Card className="xl:col-span-2">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">Match Results — Top 5</CardTitle>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                Threshold: <span className={`font-semibold ${confidenceThreshold[0] <= 0.68 ? "text-amber-600" : "text-foreground"}`}>{confidenceThreshold[0].toFixed(2)}</span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {matchResults.map((m) => {
+              const aboveThreshold = m.confidence >= confidenceThreshold[0];
+              return (
+                <div
+                  key={m.rank}
+                  className={cn(
+                    "p-3 rounded-lg border transition-colors",
+                    m.rank === 1 && aboveThreshold ? "border-primary/40 bg-primary/5" :
+                    !aboveThreshold ? "border-border opacity-60" : "border-border bg-card"
+                  )}
+                  data-testid={`match-result-${m.rank}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
+                      m.rank === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    )}>#{m.rank}</div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold text-sm text-foreground">{m.provider}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="text-center">
+                            <div className="text-[10px] text-muted-foreground">Score</div>
+                            <div className="text-sm font-bold text-foreground">{m.score}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-[10px] text-muted-foreground">Confidence</div>
+                            <div className={cn("text-sm font-bold", aboveThreshold ? "text-emerald-600" : "text-red-500")}>
+                              {Math.round(m.confidence * 100)}%
+                            </div>
+                          </div>
+                          {!aboveThreshold && (
+                            <span className="text-[10px] text-red-500 font-medium">Below threshold</span>
+                          )}
+                        </div>
+                      </div>
+                      <Progress value={m.score} className="h-1.5 mb-2" />
+                      <div className="text-xs text-muted-foreground italic mb-2 bg-muted/30 p-2 rounded">
+                        "{m.rationale}"
+                      </div>
+                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        <span>{m.distance}</span>
+                        <span>★ {m.rating}</span>
+                        <span>{m.bookings} bookings</span>
+                        <span>{m.response_time} response</span>
+                      </div>
+                    </div>
+                    {m.rank === 1 && (
+                      <Button size="sm" className="flex-shrink-0 self-center" data-testid="btn-approve-top-match">
+                        {automationLevel === "full_auto" ? "Auto" : "Approve"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

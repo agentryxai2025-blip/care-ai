@@ -5,6 +5,8 @@ import {
   Calendar, DollarSign, Star, User, MapPin, Clock, Zap, Sparkles,
   CheckCircle2, AlertCircle, Loader2, Phone, Award, Activity
 } from "lucide-react";
+import { CareAffinityIcon } from "@/components/CareAffinityIcon";
+import { AIBadge } from "@/components/AIBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -405,19 +407,33 @@ export default function RequestWizard({ open, onClose, onComplete }: Props) {
             {step === 3 && (
               <motion.div key="step3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6">
                 <div className="text-center mb-6">
-                  <motion.div
-                    animate={matchingDone ? {} : { rotate: 360 }}
-                    transition={{ duration: 2, repeat: matchingDone ? 0 : Infinity, ease: "linear" }}
-                    className="w-14 h-14 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center"
-                  >
-                    {matchingDone
-                      ? <CheckCircle2 className="w-7 h-7 text-emerald-500" />
-                      : <Cpu className="w-7 h-7 text-primary" />
-                    }
-                  </motion.div>
-                  <h3 className="text-base font-bold text-foreground">
-                    {matchingDone ? "Match Found!" : "CareAffinity Engine Running"}
-                  </h3>
+                  <div className="relative w-14 h-14 mx-auto mb-3">
+                    <motion.div
+                      animate={matchingDone ? {} : { rotate: 360 }}
+                      transition={{ duration: 2, repeat: matchingDone ? 0 : Infinity, ease: "linear" }}
+                      className="w-14 h-14 rounded-full bg-violet-50 dark:bg-violet-900/20 border-2 border-violet-200 dark:border-violet-700 flex items-center justify-center"
+                    >
+                      {matchingDone
+                        ? <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+                        : <CareAffinityIcon className="w-8 h-8" />
+                      }
+                    </motion.div>
+                    {!matchingDone && (
+                      <motion.div
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-violet-100 dark:bg-violet-900/40 border border-violet-300 dark:border-violet-600 flex items-center justify-center"
+                      >
+                        <Sparkles className="w-2.5 h-2.5 text-violet-600 dark:text-violet-400" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <h3 className="text-base font-bold text-foreground">
+                      {matchingDone ? "Match Found!" : "CareAffinity Engine Running"}
+                    </h3>
+                    {!matchingDone && <AIBadge pulse />}
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {matchingDone
                       ? `Found ${providers.length} qualified providers — top match: ${confidence}% confidence`

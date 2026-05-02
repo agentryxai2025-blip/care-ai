@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Play, ChevronRight, Info, TrendingUp, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { CareAffinityIcon } from "@/components/CareAffinityIcon";
+import { AIBadge, AIIcon } from "@/components/AIBadge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -136,6 +137,7 @@ export default function Matching() {
         <div>
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <CareAffinityIcon className="w-6 h-6" /> CareAffinity Engine
+            <AIBadge size="md" />
           </h1>
           <p className="text-sm text-muted-foreground">Participant–Provider Intelligence — Load-Bearing Component</p>
         </div>
@@ -213,6 +215,16 @@ export default function Matching() {
                     <div className="text-[10px] text-muted-foreground text-center leading-tight">
                       {stage.shortDesc}
                     </div>
+
+                    {/* AI indicator on AI-driven stages (3–6) */}
+                    {i >= 2 && (
+                      <div className="mt-1.5">
+                        <AIIcon className={cn(
+                          "w-3 h-3 mx-auto transition-colors duration-300",
+                          isActive ? "text-violet-500" : isDone ? "text-violet-400" : "text-muted-foreground/25"
+                        )} />
+                      </div>
+                    )}
 
                     {/* Status at bottom */}
                     <div className="mt-auto pt-2">

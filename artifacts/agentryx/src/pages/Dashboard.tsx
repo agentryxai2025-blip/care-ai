@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import {
   Users, Briefcase, FileText, CreditCard, ShieldAlert, Zap,
-  TrendingUp, Clock, ArrowRight, Activity, Plus
+  TrendingUp, Clock, ArrowRight, Activity, Plus, Sparkles
 } from "lucide-react";
 import RequestWizard from "@/components/RequestWizard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -107,12 +107,12 @@ export default function Dashboard() {
       </div>
 
       {/* AI Engine status banner */}
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg">
-        <Zap className="w-4 h-4 text-indigo-600" />
-        <span className="text-sm text-indigo-800 dark:text-indigo-300">
+      <div className="flex items-center gap-3 px-4 py-2.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg">
+        <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400 flex-shrink-0" />
+        <span className="text-sm text-violet-900 dark:text-violet-300">
           <span className="font-semibold">CareAffinity Engine</span> — Assisted mode · Confidence threshold 0.78 · 71% auto-approved today
         </span>
-        <Link href="/matching" className="ml-auto text-xs text-indigo-600 hover:underline flex items-center gap-1">
+        <Link href="/matching" className="ml-auto text-xs text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1 flex-shrink-0">
           Configure <ArrowRight className="w-3 h-3" />
         </Link>
       </div>

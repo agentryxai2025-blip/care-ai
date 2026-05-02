@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Bell, Sun, Moon, Waves, LogOut, User
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { CareAffinityIcon } from "@/components/CareAffinityIcon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +34,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard },
       { href: "/requests", label: "Requests", icon: FileText, badge: "8" },
-      { href: "/matching", label: "CareAffinity", icon: Cpu },
+      { href: "/matching", label: "CareAffinity", icon: CareAffinityIcon },
       { href: "/bookings", label: "Bookings", icon: Calendar },
     ],
   },

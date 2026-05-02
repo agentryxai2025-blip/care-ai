@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Cpu, Play, ChevronRight, Info, TrendingUp, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { Play, ChevronRight, Info, TrendingUp, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { CareAffinityIcon } from "@/components/CareAffinityIcon";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -134,7 +135,7 @@ export default function Matching() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-primary" /> CareAffinity Engine
+            <CareAffinityIcon className="w-6 h-6" /> CareAffinity Engine
           </h1>
           <p className="text-sm text-muted-foreground">Participant–Provider Intelligence — Load-Bearing Component</p>
         </div>

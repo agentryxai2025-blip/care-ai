@@ -142,14 +142,10 @@ export default function Requests() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                <AnimatePresence>
-                  {filtered.map((r, idx) => (
-                    <motion.tr
+                  {filtered.map((r) => (
+                    <tr
                       key={r.id}
-                      initial={r.isNew ? { opacity: 0, backgroundColor: "hsl(var(--primary) / 0.12)", y: -8 } : false}
-                      animate={{ opacity: 1, backgroundColor: "transparent", y: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className="hover:bg-muted/30 transition-colors"
+                      className={`hover:bg-muted/30 transition-colors ${r.isNew ? "animate-pulse-once bg-primary/5" : ""}`}
                       data-testid={`request-row-${r.id}`}
                     >
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
@@ -176,9 +172,8 @@ export default function Requests() {
                       <td className="px-4 py-3">
                         <Link href={`/requests/${r.id}`} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors inline-flex"><ChevronRight className="w-4 h-4" /></Link>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
-                </AnimatePresence>
               </tbody>
             </table>
           </div>

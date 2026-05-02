@@ -1,3 +1,25 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient rounded background -->
+  <rect width="180" height="180" rx="42" fill="url(#bg)"/>
+  <!-- Soft glow under heart -->
+  <ellipse cx="90" cy="105" rx="52" ry="18" fill="white" opacity="0.08"/>
+  <!-- White heart -->
+  <path d="M90 133C89 132 32 97 32 63C32 46 45 35 61 35C72 35 82 41 90 53C98 41 108 35 119 35C135 35 148 46 148 63C148 97 91 132 90 133Z" fill="white"/>
+  <!-- Heartbeat / EKG pulse line inside heart (care + AI) -->
+  <path d="M50 80L67 80L74 61L83 98L89 73L95 85L102 80L130 80" stroke="url(#pulse)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Small sparkle dot — AI indicator -->
+  <circle cx="143" cy="37" r="8" fill="#a5f3fc" opacity="0.85"/>
+  <circle cx="143" cy="37" r="4" fill="white" opacity="0.9"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0d9488"/>
+      <stop offset="0.5" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="pulse" x1="50" y1="80" x2="130" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5eead4"/>
+      <stop offset="0.5" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
 </svg>

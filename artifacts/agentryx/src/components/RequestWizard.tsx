@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, ChevronRight, ChevronLeft, Check, Cpu, Search, ShieldCheck,
@@ -94,8 +94,8 @@ export default function RequestWizard({ open, onClose, onComplete }: Props) {
   const [bookingId, setBookingId] = useState("");
   const matchingRef = useRef<any>(null);
   const counterRef = useRef<any>(null);
-
-  const requestId = `REQ-${2848 + Math.floor(Math.random() * 10)}`;
+  const requestIdRef = useRef(`REQ-${2848 + Math.floor(Math.random() * 10)}`);
+  const requestId = requestIdRef.current;
 
   const update = (key: keyof FormData, val: any) => setForm(f => ({ ...f, [key]: val }));
 

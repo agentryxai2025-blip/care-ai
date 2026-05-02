@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Cpu, Play, Pause, ChevronRight, Info } from "lucide-react";
+import { Cpu, Play, ChevronRight, Info, TrendingUp, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const pipelineStages = [
@@ -22,6 +23,26 @@ const matchResults = [
   { rank: 3, provider: "Sophie Laurent", score: 76, confidence: 0.68, distance: "4.7 km", rating: 4.7, bookings: 38, response_time: "28 min", rationale: "4.7 km from participant, available in schedule window, 4.7★ rating, certified in manual handling, female worker.", features: { distance: 82, skill_match: 80, availability: 75, price: 90, rating: 94, reliability: 94, response_speed: 72, repeat_signal: 20 } },
   { rank: 4, provider: "Emma Thornton", score: 61, confidence: 0.54, distance: "2.8 km", rating: 4.3, bookings: 12, response_time: "55 min", rationale: "2.8 km from participant (closest), but limited experience, slower response, screening expiring soon.", features: { distance: 98, skill_match: 70, availability: 65, price: 88, rating: 86, reliability: 85, response_speed: 50, repeat_signal: 0 } },
   { rank: 5, provider: "Isabella Cruz", score: 58, confidence: 0.49, distance: "9.3 km", rating: 4.5, bookings: 47, response_time: "35 min", rationale: "9.3 km from participant, limited availability in window, no prior experience with this participant type.", features: { distance: 55, skill_match: 72, availability: 60, price: 86, rating: 90, reliability: 90, response_speed: 68, repeat_signal: 0 } },
+];
+
+// Score at each pipeline stage per provider (index matches matchResults order)
+// Emma (idx 3) leads at stage 1 due to proximity — then Maria overtakes from stage 2 onward
+const STAGE_SCORES: number[][] = [
+  [0,  0,  0,  0,  0],   // 0: Intake — normalising, no scores yet
+  [18, 15, 14, 22,  8],  // 1: Hard Filters — Emma leads! (2.8 km closest)
+  [45, 39, 34, 30, 25],  // 2: Feature Extraction — Maria overtakes on skills + availability
+  [72, 64, 55, 44, 38],  // 3: Scoring — weights applied, gap widens
+  [83, 76, 68, 53, 48],  // 4: Confidence Score — near final
+  [92, 85, 76, 61, 58],  // 5: Explainability — final scores locked
+];
+
+const STAGE_INSIGHT: (string | null)[] = [
+  null,
+  "Proximity-driven — Emma Thornton leads at 2.8 km closest to participant",
+  "🔄 Maria Santos overtakes — superior skill match & availability fit",
+  "Gap widens — weight vector amplifies Maria's multi-factor advantage",
+  "Confidence scores calculated — gap to runner-up boosts Maria's confidence",
+  "Rankings locked — explainability rationales generated for all 5 matches",
 ];
 
 const weights = [
@@ -42,14 +63,18 @@ const automationLevels = [
   { value: "full_auto", label: "Full Auto", desc: "Always auto-book. Console handles exceptions only." },
 ];
 
-const featureLabels = ["Distance", "Skill Match", "Availability", "Price", "Rating", "Reliability", "Speed", "Repeat"];
-
 export default function Matching() {
   const [activeStage, setActiveStage] = useState(0);
   const [running, setRunning] = useState(false);
+  const [liveScores, setLiveScores] = useState(STAGE_SCORES[0]);
   const [automationLevel, setAutomationLevel] = useState("assisted");
   const [confidenceThreshold, setConfidenceThreshold] = useState([0.75]);
-  const [providerPool, setProviderPool] = useState(89);
+  const [providerPool] = useState(89);
+
+  // Sync live scores whenever stage changes
+  useEffect(() => {
+    setLiveScores(STAGE_SCORES[Math.min(activeStage, 5)]);
+  }, [activeStage]);
 
   useEffect(() => {
     if (!running) return;
@@ -64,10 +89,33 @@ export default function Matching() {
 
   const runSimulation = () => {
     setActiveStage(0);
+    setLiveScores(STAGE_SCORES[0]);
     setRunning(true);
   };
 
+  const resetSimulation = () => {
+    setActiveStage(0);
+    setLiveScores(STAGE_SCORES[0]);
+    setRunning(false);
+  };
+
   const afterFilter = providerPool - pipelineStages[1].filtered!;
+
+  // Build leaderboard sorted by current score
+  const leaderboard = matchResults
+    .map((m, i) => ({ ...m, currentScore: liveScores[i] }))
+    .sort((a, b) => b.currentScore - a.currentScore)
+    .map((m, i) => ({ ...m, currentRank: i + 1 }));
+
+  const prevRankOf = (name: string) => {
+    if (activeStage < 2) return null;
+    const prevScores = STAGE_SCORES[Math.max(0, activeStage - 1)];
+    const prevBoard = matchResults
+      .map((m, i) => ({ name: m.provider, score: prevScores[i] }))
+      .sort((a, b) => b.score - a.score);
+    const prev = prevBoard.findIndex(p => p.name === name) + 1;
+    return prev;
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -79,7 +127,7 @@ export default function Matching() {
           <p className="text-sm text-muted-foreground">Matching & Confidence Engine — Load-Bearing Component</p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => { setActiveStage(0); setRunning(false); }} data-testid="btn-reset">Reset</Button>
+          <Button size="sm" variant="outline" onClick={resetSimulation} data-testid="btn-reset">Reset</Button>
           <Button size="sm" onClick={runSimulation} disabled={running} data-testid="btn-run-simulation">
             <Play className="w-3.5 h-3.5 mr-1.5" /> {running ? "Running..." : "Run Simulation"}
           </Button>
@@ -150,6 +198,141 @@ export default function Matching() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Live Score Leaderboard — appears after stage 1 */}
+      <AnimatePresence>
+        {activeStage >= 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+          >
+            <Card className="border-primary/30">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <CardTitle className="text-sm font-semibold">Live Score Progression</CardTitle>
+                    <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
+                      Stage {activeStage} / 6
+                    </span>
+                  </div>
+                  {running && (
+                    <span className="flex items-center gap-1 text-xs text-primary">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      Live
+                    </span>
+                  )}
+                </div>
+                {STAGE_INSIGHT[activeStage] && (
+                  <p className={cn(
+                    "text-xs mt-1 font-medium",
+                    activeStage === 1 ? "text-amber-600 dark:text-amber-400" :
+                    activeStage === 2 ? "text-teal-600 dark:text-teal-400" :
+                    "text-muted-foreground"
+                  )}>
+                    {activeStage === 1 && "⚡ "}{STAGE_INSIGHT[activeStage]}
+                  </p>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-0">
+                  <AnimatePresence initial={false}>
+                    {leaderboard.map((p, idx) => {
+                      const prev = prevRankOf(p.provider);
+                      const moved = prev !== null && prev !== p.currentRank;
+                      const movedUp = prev !== null && p.currentRank < prev;
+                      const movedDown = prev !== null && p.currentRank > prev;
+                      const isLeader = idx === 0;
+
+                      return (
+                        <motion.div
+                          key={p.provider}
+                          layout
+                          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                          className={cn(
+                            "flex items-center gap-3 py-2.5 px-2 rounded-lg transition-colors",
+                            isLeader ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/30"
+                          )}
+                        >
+                          {/* Rank badge */}
+                          <motion.div
+                            layout
+                            className={cn(
+                              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
+                              isLeader ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            #{p.currentRank}
+                          </motion.div>
+
+                          {/* Rank change indicator */}
+                          <div className="w-5 flex-shrink-0">
+                            {moved && movedUp && (
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center">
+                                <ArrowUp className="w-3.5 h-3.5 text-emerald-500" />
+                              </motion.div>
+                            )}
+                            {moved && movedDown && (
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center">
+                                <ArrowDown className="w-3.5 h-3.5 text-red-500" />
+                              </motion.div>
+                            )}
+                            {(!moved || prev === null) && <Minus className="w-3 h-3 text-muted-foreground/30" />}
+                          </div>
+
+                          {/* Name */}
+                          <span className={cn("text-sm w-36 flex-shrink-0", isLeader ? "font-semibold text-foreground" : "text-foreground")}>
+                            {p.provider}
+                            {p.distance && <span className="block text-[10px] text-muted-foreground font-normal">{p.distance} · ★{p.rating}</span>}
+                          </span>
+
+                          {/* Score bar */}
+                          <div className="flex-1 flex items-center gap-2 min-w-0">
+                            <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                              <motion.div
+                                className={cn("h-full rounded-full", isLeader ? "bg-primary" : "bg-muted-foreground/40")}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${p.currentScore}%` }}
+                                transition={{ duration: 0.6, ease: "easeOut" }}
+                              />
+                            </div>
+                            <motion.span
+                              key={`${p.provider}-${p.currentScore}`}
+                              initial={{ scale: 1.3, color: isLeader ? "hsl(var(--primary))" : "inherit" }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className={cn("text-sm font-bold w-8 text-right flex-shrink-0", isLeader ? "text-primary" : "text-foreground")}
+                            >
+                              {p.currentScore}
+                            </motion.span>
+                          </div>
+
+                          {/* Confidence (only after stage 4) */}
+                          {activeStage >= 4 && (
+                            <span className={cn(
+                              "text-[10px] font-semibold w-10 text-right flex-shrink-0",
+                              p.confidence >= confidenceThreshold[0] ? "text-emerald-600" : "text-red-500"
+                            )}>
+                              {Math.round(p.confidence * 100)}%
+                            </span>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+                {activeStage === 5 && (
+                  <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 text-xs text-emerald-600 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                    Simulation complete — Maria Santos ranked #1 with score 92 · 91% confidence
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Config panel */}

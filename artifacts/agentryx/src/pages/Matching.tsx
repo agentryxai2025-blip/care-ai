@@ -9,12 +9,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const pipelineStages = [
-  { id: 1, name: "Intake Normalisation", desc: "Convert request to canonical match query (location, service category, schedule, urgency, accessibility, language, gender preference).", icon: "01", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
-  { id: 2, name: "Hard Filters", desc: "Eliminate providers that don't meet mandatory criteria: NDIS registration tier, worker screening status, availability, radius, language, gender preference.", icon: "02", color: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400", filtered: 71 },
-  { id: 3, name: "Feature Extraction", desc: "For each candidate: distance, skill match score, availability fit, price vs. reasonable rate, rating, reliability, response speed, repeat-with-participant signal, cultural fit.", icon: "03", color: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400" },
-  { id: 4, name: "Scoring", desc: "Apply tenant weight vector to normalised features. Output: Score = Σ(Wᵢ × Fᵢ). Weights are tenant-configurable below.", icon: "04", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  { id: 5, name: "Confidence Score", desc: "Weighted blend of: data completeness (25%), score gap to runner-up (30%), historical accuracy (30%), provider freshness (15%).", icon: "05", color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" },
-  { id: 6, name: "Explainability", desc: "Generate human-readable rationale per candidate using templated explainer with feature values. Required for every match — no unexplained result.", icon: "06", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  { id: 1, name: "Intake Normalisation", shortDesc: "Parse & canonicalise", desc: "Convert request to canonical match query (location, service category, schedule, urgency, accessibility, language, gender preference).", icon: "01",
+    active: { border: "border-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20", badge: "bg-blue-500 text-white", text: "text-blue-700 dark:text-blue-300", dot: "bg-blue-500" },
+  },
+  { id: 2, name: "Hard Filters", shortDesc: "Eliminate non-matches", desc: "Eliminate providers that don't meet mandatory criteria: NDIS registration tier, worker screening status, availability, radius, language, gender preference.", icon: "02", filtered: 71,
+    active: { border: "border-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20", badge: "bg-violet-500 text-white", text: "text-violet-700 dark:text-violet-300", dot: "bg-violet-500" },
+  },
+  { id: 3, name: "Feature Extraction", shortDesc: "Score 8 raw features", desc: "For each candidate: distance, skill match score, availability fit, price vs. reasonable rate, rating, reliability, response speed, repeat-with-participant signal, cultural fit.", icon: "03",
+    active: { border: "border-teal-400", bg: "bg-teal-50 dark:bg-teal-900/20", badge: "bg-teal-500 text-white", text: "text-teal-700 dark:text-teal-300", dot: "bg-teal-500" },
+  },
+  { id: 4, name: "Scoring", shortDesc: "Apply weight vector", desc: "Apply tenant weight vector to normalised features. Output: Score = Σ(Wᵢ × Fᵢ). Weights are tenant-configurable below.", icon: "04",
+    active: { border: "border-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20", badge: "bg-amber-500 text-white", text: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500" },
+  },
+  { id: 5, name: "Confidence Score", shortDesc: "Calibrate certainty", desc: "Weighted blend of: data completeness (25%), score gap to runner-up (30%), historical accuracy (30%), provider freshness (15%).", icon: "05",
+    active: { border: "border-orange-400", bg: "bg-orange-50 dark:bg-orange-900/20", badge: "bg-orange-500 text-white", text: "text-orange-700 dark:text-orange-300", dot: "bg-orange-500" },
+  },
+  { id: 6, name: "Explainability", shortDesc: "Generate rationale", desc: "Generate human-readable rationale per candidate using templated explainer with feature values. Required for every match — no unexplained result.", icon: "06",
+    active: { border: "border-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", badge: "bg-emerald-500 text-white", text: "text-emerald-700 dark:text-emerald-300", dot: "bg-emerald-500" },
+  },
 ];
 
 const matchResults = [
@@ -136,66 +148,131 @@ export default function Matching() {
 
       {/* Pipeline visualization */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">6-Stage Matching Pipeline</CardTitle>
-          <CardDescription className="text-xs">REQ-2847 · Margaret Chen · Personal Care · Priority</CardDescription>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-semibold">6-Stage Matching Pipeline</CardTitle>
+              <CardDescription className="text-xs mt-0.5">REQ-2847 · Margaret Chen · Personal Care · Priority</CardDescription>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{Math.max(0, activeStage)} / 6 stages complete</span>
+              {running && <span className="flex items-center gap-1 text-primary font-medium"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />Live</span>}
+            </div>
+          </div>
+          {/* Progress track */}
+          <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 via-teal-500 to-emerald-500"
+              animate={{ width: `${(activeStage / 6) * 100}%` }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
-              {pipelineStages.map((stage, i) => {
-                const isActive = activeStage === i;
-                const isDone = activeStage > i;
-                return (
-                  <div key={stage.id} className="flex items-center">
-                    <div
-                      className={cn(
-                        "flex flex-col items-center p-3 rounded-lg border-2 min-w-36 transition-all duration-500 cursor-pointer",
-                        isActive && "border-primary shadow-md",
-                        isDone && "border-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10",
-                        !isActive && !isDone && "border-border bg-card"
+        <CardContent className="pt-0">
+          {/* Stage blocks — flex-1 so they fill full width equally */}
+          <div className="flex gap-1.5 items-stretch">
+            {pipelineStages.map((stage, i) => {
+              const isActive = activeStage === i;
+              const isDone = activeStage > i;
+              const c = stage.active;
+              return (
+                <div key={stage.id} className="flex items-stretch gap-1.5 flex-1 min-w-0">
+                  <motion.div
+                    layout
+                    onClick={() => setActiveStage(i)}
+                    data-testid={`pipeline-stage-${i + 1}`}
+                    animate={isActive ? { scale: 1.02 } : { scale: 1 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                    className={cn(
+                      "flex-1 flex flex-col items-center px-2 py-4 rounded-xl border-2 cursor-pointer transition-colors duration-300 min-h-[140px]",
+                      isActive && `${c.border} ${c.bg} shadow-md`,
+                      isDone && "border-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/10",
+                      !isActive && !isDone && "border-border bg-card hover:border-muted-foreground/40 hover:bg-muted/30"
+                    )}
+                  >
+                    {/* Stage number badge */}
+                    <div className={cn(
+                      "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold mb-3 transition-all duration-300 flex-shrink-0",
+                      isDone ? "bg-emerald-500 text-white shadow-sm" :
+                      isActive ? `${c.badge} shadow-md` :
+                      "bg-muted text-muted-foreground"
+                    )}>
+                      {isDone ? "✓" : stage.icon}
+                    </div>
+
+                    {/* Name */}
+                    <div className={cn(
+                      "text-xs font-bold text-center leading-tight mb-1.5",
+                      isActive ? c.text : isDone ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"
+                    )}>
+                      {stage.name}
+                    </div>
+
+                    {/* Short descriptor */}
+                    <div className="text-[10px] text-muted-foreground text-center leading-tight">
+                      {stage.shortDesc}
+                    </div>
+
+                    {/* Status at bottom */}
+                    <div className="mt-auto pt-2">
+                      {isActive && (
+                        <div className="flex items-center gap-1 justify-center">
+                          <span className={`w-1.5 h-1.5 rounded-full ${c.dot} animate-pulse`} />
+                          <span className={`text-[10px] font-semibold ${c.text}`}>Processing</span>
+                        </div>
                       )}
-                      onClick={() => setActiveStage(i)}
-                      data-testid={`pipeline-stage-${i + 1}`}
-                    >
-                      <div className={`text-[10px] font-bold px-2 py-0.5 rounded mb-2 ${stage.color}`}>{stage.icon}</div>
-                      <div className="text-xs font-semibold text-foreground text-center">{stage.name}</div>
-                      {stage.filtered && isDone && (
-                        <div className="text-[10px] text-red-600 mt-1 font-medium">-{stage.filtered} filtered</div>
+                      {isDone && stage.filtered && (
+                        <div className="text-[10px] text-red-600 dark:text-red-400 font-semibold text-center">
+                          −{stage.filtered} filtered
+                        </div>
                       )}
                       {isDone && !stage.filtered && (
-                        <div className="text-[10px] text-emerald-600 mt-1 font-medium">Done</div>
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold text-center">Complete</div>
                       )}
-                      {isActive && <div className="w-3 h-3 rounded-full bg-primary animate-pulse mt-1" />}
                     </div>
-                    {i < pipelineStages.length - 1 && (
-                      <ChevronRight className={`w-4 h-4 mx-1 flex-shrink-0 transition-colors ${isDone ? "text-emerald-500" : "text-muted-foreground/30"}`} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {activeStage >= 0 && activeStage < 6 && (
-              <div className="mt-4 p-3 bg-muted/40 rounded-lg border border-border">
-                <div className="flex items-start gap-2">
-                  <Info className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="text-xs font-semibold text-foreground mb-0.5">{pipelineStages[activeStage].name}</div>
-                    <div className="text-xs text-muted-foreground">{pipelineStages[activeStage].desc}</div>
-                    {activeStage === 1 && (
-                      <div className="mt-1.5 text-xs">
-                        <span className="text-muted-foreground">Provider pool: </span>
-                        <span className="font-semibold text-foreground">{providerPool}</span>
-                        <span className="text-muted-foreground"> → after filters: </span>
-                        <span className="font-semibold text-foreground">{afterFilter}</span>
-                        <span className="text-red-600 ml-1">({pipelineStages[1].filtered} eliminated)</span>
-                      </div>
-                    )}
-                  </div>
+                  </motion.div>
+
+                  {/* Arrow connector between blocks */}
+                  {i < pipelineStages.length - 1 && (
+                    <div className="flex items-center flex-shrink-0 self-center">
+                      <ChevronRight className={cn(
+                        "w-4 h-4 transition-colors duration-300",
+                        isDone ? "text-emerald-500" : isActive ? "text-primary" : "text-muted-foreground/30"
+                      )} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Active stage detail panel */}
+          {activeStage >= 0 && activeStage < 6 && (
+            <motion.div
+              key={activeStage}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="mt-4 p-3 bg-muted/40 rounded-lg border border-border"
+            >
+              <div className="flex items-start gap-2">
+                <Info className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-xs font-semibold text-foreground mb-0.5">{pipelineStages[activeStage].name}</div>
+                  <div className="text-xs text-muted-foreground">{pipelineStages[activeStage].desc}</div>
+                  {activeStage === 1 && (
+                    <div className="mt-1.5 text-xs">
+                      <span className="text-muted-foreground">Provider pool: </span>
+                      <span className="font-semibold text-foreground">{providerPool}</span>
+                      <span className="text-muted-foreground"> → after filters: </span>
+                      <span className="font-semibold text-foreground">{afterFilter}</span>
+                      <span className="text-red-600 ml-1">({pipelineStages[1].filtered} eliminated)</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
+            </motion.div>
+          )}
         </CardContent>
       </Card>
 

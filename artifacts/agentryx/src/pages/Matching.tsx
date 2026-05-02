@@ -134,9 +134,9 @@ export default function Matching() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-primary" /> AI Matching Engine
+            <Cpu className="w-5 h-5 text-primary" /> CareAffinity Engine
           </h1>
-          <p className="text-sm text-muted-foreground">Matching & Confidence Engine — Load-Bearing Component</p>
+          <p className="text-sm text-muted-foreground">Participant–Provider Intelligence — Load-Bearing Component</p>
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={resetSimulation} data-testid="btn-reset">Reset</Button>

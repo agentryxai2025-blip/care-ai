@@ -179,7 +179,7 @@ export default function DataSources() {
               <div className="flex flex-col justify-center w-32">
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase text-center mb-1">AI Services</div>
                 <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg p-3 text-center space-y-1">
-                  <div className="text-[10px] font-bold text-amber-800 dark:text-amber-300">★ Matching Engine</div>
+                  <div className="text-[10px] font-bold text-amber-800 dark:text-amber-300">★ CareAffinity Engine</div>
                   {["Intent Classifier", "Explainer", "Anomaly Detector"].map(s => (
                     <div key={s} className="text-[10px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-1 py-0.5 rounded">{s}</div>
                   ))}

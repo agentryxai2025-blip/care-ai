@@ -33,7 +33,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard },
       { href: "/requests", label: "Requests", icon: FileText, badge: "8" },
-      { href: "/matching", label: "AI Matching", icon: Cpu },
+      { href: "/matching", label: "CareAffinity", icon: Cpu },
       { href: "/bookings", label: "Bookings", icon: Calendar },
     ],
   },

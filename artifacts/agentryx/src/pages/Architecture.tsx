@@ -53,7 +53,7 @@ const layers = [
       { id: "orchestration", label: "Orchestration (Sagas)", desc: "Event-driven saga orchestration. Automates multi-step workflows: Match→Book, Service→Claim, Incident sagas.", sub: "Event-driven" },
       { id: "notif_orch", label: "Notification Orchestrator", desc: "Multi-channel notification dispatch. Handles routing, retries, template rendering, and send scheduling.", sub: "Multi-channel" },
       { id: "intake_agent", label: "AI Intake Agent", desc: "Processes voice/chat intakes into canonical service requests. Classifies intent, extracts entities.", sub: "AI Agent" },
-      { id: "match_agent", label: "AI Matching Agent", desc: "Invokes the Matching & Confidence Engine. Handles auto-act vs human-review routing based on automation level.", sub: "AI Agent" },
+      { id: "match_agent", label: "CareAffinity Agent", desc: "Invokes the CareAffinity Engine. Handles auto-act vs human-review routing based on configured automation level and confidence threshold.", sub: "AI Agent" },
       { id: "claim_agent", label: "Claims Agent", desc: "Automates claim drafting, validation, and submission. Checks price caps and plan balance before submission.", sub: "AI Agent" },
       { id: "escalation", label: "Escalation Engine", desc: "Monitors SLA breaches, unresponded matches, expiring credentials. Routes escalations to correct staff.", sub: "Rule-based" },
     ],
@@ -66,7 +66,7 @@ const layers = [
     headerColor: "bg-amber-100 dark:bg-amber-900/40",
     textColor: "text-amber-800 dark:text-amber-300",
     components: [
-      { id: "matching_engine", label: "Matching & Confidence Engine", desc: "6-stage pipeline: Intake Normalisation → Hard Filters → Feature Extraction → Scoring → Confidence → Explainability. The load-bearing component. Configurable weight vectors per tenant. Learning loop.", sub: "LOAD-BEARING ★", isLoadBearing: true },
+      { id: "matching_engine", label: "CareAffinity Engine", desc: "6-stage pipeline: Intake Normalisation → Hard Filters → Feature Extraction → Scoring → Confidence → Explainability. The load-bearing component. Configurable weight vectors per tenant. Participant–provider affinity learning loop.", sub: "LOAD-BEARING ★", isLoadBearing: true },
       { id: "intent", label: "Intent Classifier", desc: "Classifies incoming requests and messages by intent. Powers the AI intake agent and chat agent.", sub: "NLP Model" },
       { id: "stt_tts", label: "STT / TTS", desc: "Speech-to-text and text-to-speech for voice intake and outbound voice notifications.", sub: "Twilio Voice + AI" },
       { id: "explainer", label: "Recommendation Explainer", desc: "Generates human-readable rationales for match results. Required for every match — regulatory context.", sub: "Templated AI" },
@@ -167,7 +167,7 @@ const featureModules = [
   { icon: Database, label: "Audit Trail", sub: "Append-only · NDIS Commission", color: "border-slate-200 bg-slate-50 dark:bg-slate-800/40 dark:border-slate-700", iconColor: "text-slate-600" },
   { icon: Lock, label: "Security", sub: "OWASP · RBAC · MFA · Pen-test", color: "border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800", iconColor: "text-red-600" },
   { icon: GitBranch, label: "Multi-Tenancy", sub: "Isolated · Branded · Configurable", color: "border-indigo-200 bg-indigo-50 dark:bg-indigo-900/10 dark:border-indigo-800", iconColor: "text-indigo-600" },
-  { icon: Activity, label: "AI Matching", sub: "6-stage pipeline · Live scoring", color: "border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800", iconColor: "text-amber-600" },
+  { icon: Activity, label: "CareAffinity", sub: "6-stage pipeline · Live scoring", color: "border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800", iconColor: "text-amber-600" },
 ];
 
 const platformBenefits = [

@@ -110,7 +110,7 @@ export default function Dashboard() {
       <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg">
         <Zap className="w-4 h-4 text-indigo-600" />
         <span className="text-sm text-indigo-800 dark:text-indigo-300">
-          <span className="font-semibold">Matching Engine</span> — Assisted mode · Confidence threshold 0.78 · 71% auto-approved today
+          <span className="font-semibold">CareAffinity Engine</span> — Assisted mode · Confidence threshold 0.78 · 71% auto-approved today
         </span>
         <Link href="/matching" className="ml-auto text-xs text-indigo-600 hover:underline flex items-center gap-1">
           Configure <ArrowRight className="w-3 h-3" />

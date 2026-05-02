@@ -34,7 +34,7 @@ const mockRequest = {
     { event: "Request submitted", detail: "Via Operations Console", time: "9:14 AM", actor: "Helen Marsh", type: "info", stage: "intake" },
     { event: "Plan balance validated", detail: "$42,800 remaining — sufficient for service", time: "9:14 AM", actor: "System", type: "success", stage: "validation" },
     { event: "NDIS eligibility confirmed", detail: "Active plan, support category 01 approved", time: "9:14 AM", actor: "System", type: "success", stage: "validation" },
-    { event: "AI Matching engine started", detail: "89 providers being evaluated across 6 criteria", time: "9:15 AM", actor: "AI Engine", type: "info", stage: "matching" },
+    { event: "CareAffinity Engine started", detail: "89 providers being evaluated across 6 criteria", time: "9:15 AM", actor: "AI Engine", type: "info", stage: "matching" },
     { event: "3 candidates identified", detail: "Top match: Maria Santos — 92% confidence", time: "9:15 AM", actor: "AI Engine", type: "success", stage: "matching" },
     { event: "Awaiting human review", detail: "Threshold 78% exceeded — auto-approve eligible", time: "9:15 AM", actor: "System", type: "warning", stage: "review" },
   ],
@@ -71,7 +71,7 @@ const WORKFLOW_STAGES = [
   },
   {
     id: "matching",
-    label: "AI Matching",
+    label: "CareAffinity",
     sublabel: "Provider search & ranking",
     icon: Cpu,
     completedAt: "9:15 AM",

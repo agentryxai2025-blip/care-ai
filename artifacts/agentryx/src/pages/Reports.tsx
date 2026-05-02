@@ -170,7 +170,7 @@ export default function Reports() {
         {/* Matching accuracy */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">AI Matching Confidence Trend</CardTitle>
+            <CardTitle className="text-sm font-semibold">CareAffinity Confidence Trend</CardTitle>
             <CardDescription className="text-xs">Average confidence score per month</CardDescription>
           </CardHeader>
           <CardContent>

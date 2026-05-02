@@ -51,7 +51,7 @@ const getProviders = (serviceType: string) => {
   return MOCK_PROVIDERS[serviceType] || MOCK_PROVIDERS["Personal Care"];
 };
 
-const STEPS = ["Details", "Requirements", "AI Matching", "Select Match", "Confirmation"];
+const STEPS = ["Details", "Requirements", "CareAffinity", "Select Match", "Confirmation"];
 
 interface FormData {
   participant: string;
@@ -416,7 +416,7 @@ export default function RequestWizard({ open, onClose, onComplete }: Props) {
                     }
                   </motion.div>
                   <h3 className="text-base font-bold text-foreground">
-                    {matchingDone ? "Match Found!" : "AI Matching in Progress"}
+                    {matchingDone ? "Match Found!" : "CareAffinity Engine Running"}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     {matchingDone
@@ -626,7 +626,7 @@ export default function RequestWizard({ open, onClose, onComplete }: Props) {
                   <div className="space-y-2">
                     {[
                       { label: "Request Submitted", detail: "Via Operations Console", time: "Just now", status: "done" },
-                      { label: "AI Matching Completed", detail: `${selectedProvider?.confidence}% confidence · ${providers.length} providers ranked`, time: "Just now", status: "done" },
+                      { label: "CareAffinity Engine Complete", detail: `${selectedProvider?.confidence}% confidence · ${providers.length} providers ranked`, time: "Just now", status: "done" },
                       { label: "Match Auto-Approved", detail: `Threshold 78% · Score ${selectedProvider?.confidence}%`, time: "Just now", status: "done" },
                       { label: "Provider Notified", detail: selectedProvider?.name, time: "Pending", status: "pending" },
                       { label: "Booking Confirmed", detail: bookingId, time: "Pending", status: "pending" },

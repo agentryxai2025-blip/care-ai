@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Calendar, Search, Filter } from "lucide-react";
+import { AISparkle } from "@/components/AIBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -7,24 +8,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 
 const bookings = [
-  { id: "BKG-1021", participant: "Margaret Chen", provider: "Maria Santos", service: "Personal Care", date: "2 May 2026", time: "8:00–10:00 AM", price: 88.40, status: "In Progress", agreement: "SA-2021-089" },
-  { id: "BKG-1022", participant: "David Okonkwo", provider: "James O'Brien", service: "Community Access", date: "2 May 2026", time: "10:00 AM–2:00 PM", price: 192.40, status: "In Progress", agreement: "SA-2022-012" },
-  { id: "BKG-1023", participant: "Robert Kirby", provider: "Priya Sharma", service: "Therapy Support", date: "2 May 2026", time: "1:00–2:30 PM", price: 193.99, status: "Confirmed", agreement: "SA-2023-047" },
-  { id: "BKG-1024", participant: "Yuki Tanaka", provider: "Carlos Mendez", service: "Domestic Assistance", date: "2 May 2026", time: "2:00–4:00 PM", price: 84.00, status: "Confirmed", agreement: "SA-2024-003" },
-  { id: "BKG-1020", participant: "Tom Eriksen", provider: "Maria Santos", service: "Personal Care", date: "1 May 2026", time: "9:00–11:00 AM", price: 88.40, status: "Completed", agreement: "SA-2020-091" },
-  { id: "BKG-1019", participant: "Linda Zhao", provider: "Wei Zhang", service: "Community Access", date: "1 May 2026", time: "10:00 AM–12:00 PM", price: 96.20, status: "Completed", agreement: "SA-2019-056" },
-  { id: "BKG-1018", participant: "Sarah Williams", provider: "Priya Sharma", service: "Therapy Support", date: "1 May 2026", time: "2:00–3:30 PM", price: 193.99, status: "Cancelled", agreement: "SA-2018-002" },
-  { id: "BKG-1017", participant: "James Patel", provider: "Carlos Mendez", service: "Domestic Assistance", date: "30 Apr 2026", time: "9:00–11:00 AM", price: 84.00, status: "Completed", agreement: "SA-2017-033" },
-  { id: "BKG-1016", participant: "Aisha Nguyen", provider: "Fatima Al-Hassan", service: "Personal Care", date: "30 Apr 2026", time: "7:30–9:00 AM", price: 66.30, status: "Completed", agreement: "SA-2016-078" },
-  { id: "BKG-1015", participant: "Carlos Rivera", provider: "Thomas Nkosi", service: "Behaviour Support", date: "30 Apr 2026", time: "3:00–5:00 PM", price: 214.41, status: "Completed", agreement: "SA-2015-019" },
-  { id: "BKG-1014", participant: "Grace O'Sullivan", provider: "Emma Thornton", service: "Domestic Assistance", date: "29 Apr 2026", time: "10:00 AM–12:00 PM", price: 84.00, status: "Cancelled", agreement: "SA-2014-067" },
-  { id: "BKG-1013", participant: "Ahmed Hassan", provider: "Fatima Al-Hassan", service: "Personal Care", date: "29 Apr 2026", time: "7:30–9:00 AM", price: 66.30, status: "Pending", agreement: null },
-  { id: "BKG-1012", participant: "Margaret Chen", provider: "Maria Santos", service: "Personal Care", date: "29 Apr 2026", time: "8:00–10:00 AM", price: 88.40, status: "Completed", agreement: "SA-2012-089" },
-  { id: "BKG-1011", participant: "Tom Eriksen", provider: "Maria Santos", service: "Personal Care", date: "28 Apr 2026", time: "9:00–11:00 AM", price: 88.40, status: "Completed", agreement: "SA-2011-091" },
-  { id: "BKG-1010", participant: "David Okonkwo", provider: "Amara Diallo", service: "Social Support", date: "28 Apr 2026", time: "2:00–4:00 PM", price: 82.20, status: "Completed", agreement: "SA-2010-022" },
-  { id: "BKG-1009", participant: "Robert Kirby", provider: "Thomas Nkosi", service: "Behaviour Support", date: "27 Apr 2026", time: "2:00–4:00 PM", price: 214.41, status: "Completed", agreement: "SA-2009-047" },
-  { id: "BKG-1008", participant: "Yuki Tanaka", provider: "Sophie Laurent", service: "Personal Care", date: "27 Apr 2026", time: "8:00–9:00 AM", price: 44.20, status: "Completed", agreement: "SA-2008-003" },
-  { id: "BKG-1007", participant: "Carlos Rivera", provider: "Isabella Cruz", service: "Community Access", date: "26 Apr 2026", time: "10:00 AM–12:00 PM", price: 96.20, status: "Completed", agreement: "SA-2007-019" },
+  { id: "BKG-1021", participant: "Margaret Chen", provider: "Maria Santos", service: "Personal Care", date: "2 May 2026", time: "8:00–10:00 AM", price: 88.40, status: "In Progress", agreement: "SA-2021-089", aiMatched: true },
+  { id: "BKG-1022", participant: "David Okonkwo", provider: "James O'Brien", service: "Community Access", date: "2 May 2026", time: "10:00 AM–2:00 PM", price: 192.40, status: "In Progress", agreement: "SA-2022-012", aiMatched: false },
+  { id: "BKG-1023", participant: "Robert Kirby", provider: "Priya Sharma", service: "Therapy Support", date: "2 May 2026", time: "1:00–2:30 PM", price: 193.99, status: "Confirmed", agreement: "SA-2023-047", aiMatched: true },
+  { id: "BKG-1024", participant: "Yuki Tanaka", provider: "Carlos Mendez", service: "Domestic Assistance", date: "2 May 2026", time: "2:00–4:00 PM", price: 84.00, status: "Confirmed", agreement: "SA-2024-003", aiMatched: false },
+  { id: "BKG-1020", participant: "Tom Eriksen", provider: "Maria Santos", service: "Personal Care", date: "1 May 2026", time: "9:00–11:00 AM", price: 88.40, status: "Completed", agreement: "SA-2020-091", aiMatched: true },
+  { id: "BKG-1019", participant: "Linda Zhao", provider: "Wei Zhang", service: "Community Access", date: "1 May 2026", time: "10:00 AM–12:00 PM", price: 96.20, status: "Completed", agreement: "SA-2019-056", aiMatched: false },
+  { id: "BKG-1018", participant: "Sarah Williams", provider: "Priya Sharma", service: "Therapy Support", date: "1 May 2026", time: "2:00–3:30 PM", price: 193.99, status: "Cancelled", agreement: "SA-2018-002", aiMatched: false },
+  { id: "BKG-1017", participant: "James Patel", provider: "Carlos Mendez", service: "Domestic Assistance", date: "30 Apr 2026", time: "9:00–11:00 AM", price: 84.00, status: "Completed", agreement: "SA-2017-033", aiMatched: false },
+  { id: "BKG-1016", participant: "Aisha Nguyen", provider: "Fatima Al-Hassan", service: "Personal Care", date: "30 Apr 2026", time: "7:30–9:00 AM", price: 66.30, status: "Completed", agreement: "SA-2016-078", aiMatched: true },
+  { id: "BKG-1015", participant: "Carlos Rivera", provider: "Thomas Nkosi", service: "Behaviour Support", date: "30 Apr 2026", time: "3:00–5:00 PM", price: 214.41, status: "Completed", agreement: "SA-2015-019", aiMatched: true },
+  { id: "BKG-1014", participant: "Grace O'Sullivan", provider: "Emma Thornton", service: "Domestic Assistance", date: "29 Apr 2026", time: "10:00 AM–12:00 PM", price: 84.00, status: "Cancelled", agreement: "SA-2014-067", aiMatched: false },
+  { id: "BKG-1013", participant: "Ahmed Hassan", provider: "Fatima Al-Hassan", service: "Personal Care", date: "29 Apr 2026", time: "7:30–9:00 AM", price: 66.30, status: "Pending", agreement: null, aiMatched: false },
+  { id: "BKG-1012", participant: "Margaret Chen", provider: "Maria Santos", service: "Personal Care", date: "29 Apr 2026", time: "8:00–10:00 AM", price: 88.40, status: "Completed", agreement: "SA-2012-089", aiMatched: true },
+  { id: "BKG-1011", participant: "Tom Eriksen", provider: "Maria Santos", service: "Personal Care", date: "28 Apr 2026", time: "9:00–11:00 AM", price: 88.40, status: "Completed", agreement: "SA-2011-091", aiMatched: true },
+  { id: "BKG-1010", participant: "David Okonkwo", provider: "Amara Diallo", service: "Social Support", date: "28 Apr 2026", time: "2:00–4:00 PM", price: 82.20, status: "Completed", agreement: "SA-2010-022", aiMatched: false },
+  { id: "BKG-1009", participant: "Robert Kirby", provider: "Thomas Nkosi", service: "Behaviour Support", date: "27 Apr 2026", time: "2:00–4:00 PM", price: 214.41, status: "Completed", agreement: "SA-2009-047", aiMatched: true },
+  { id: "BKG-1008", participant: "Yuki Tanaka", provider: "Sophie Laurent", service: "Personal Care", date: "27 Apr 2026", time: "8:00–9:00 AM", price: 44.20, status: "Completed", agreement: "SA-2008-003", aiMatched: false },
+  { id: "BKG-1007", participant: "Carlos Rivera", provider: "Isabella Cruz", service: "Community Access", date: "26 Apr 2026", time: "10:00 AM–12:00 PM", price: 96.20, status: "Completed", agreement: "SA-2007-019", aiMatched: true },
 ];
 
 const statusColors: Record<string, string> = {
@@ -113,7 +114,19 @@ export default function Bookings() {
             <tbody className="divide-y divide-border">
               {filtered.map((b) => (
                 <tr key={b.id} className="hover:bg-muted/30 transition-colors" data-testid={`booking-row-${b.id}`}>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{b.id}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      {b.id}
+                      {b.aiMatched && (
+                        <AISparkle
+                          className="w-3 h-3"
+                          title="AI-Matched Booking"
+                          tooltip="This provider was matched by CareAffinity Engine — selected from 89+ candidates using multi-factor affinity scoring with 91%+ confidence."
+                          side="right"
+                        />
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 font-medium text-foreground">{b.participant}</td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">{b.provider}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">{b.service}</td>

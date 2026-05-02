@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BarChart3, Download, TrendingUp } from "lucide-react";
+import { AIBadge, AISparkle } from "@/components/AIBadge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -170,7 +171,10 @@ export default function Reports() {
         {/* Matching accuracy */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">CareAffinity Confidence Trend</CardTitle>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <AISparkle className="w-4 h-4" tooltip="Bayesian confidence scores improve month-on-month as the engine learns from completed booking outcomes — a self-reinforcing accuracy loop." title="CareAffinity Confidence Trend" side="top" />
+              CareAffinity Confidence Trend
+            </CardTitle>
             <CardDescription className="text-xs">Average confidence score per month</CardDescription>
           </CardHeader>
           <CardContent>
@@ -209,7 +213,11 @@ export default function Reports() {
       {/* Automation effectiveness */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">Automation Effectiveness</CardTitle>
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <AISparkle className="w-4 h-4" tooltip="AI auto-approves matches when confidence exceeds the agency threshold — replacing manual ops decisions that averaged 45 minutes. Rate has grown from 58% to 71% in 6 months." title="Automation Effectiveness" side="top" />
+            Automation Effectiveness
+            <AIBadge label="71% today" size="sm" />
+          </CardTitle>
           <CardDescription className="text-xs">Auto-approved vs human-reviewed matches (%)</CardDescription>
         </CardHeader>
         <CardContent>

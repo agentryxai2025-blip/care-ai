@@ -166,7 +166,12 @@ export default function Requests() {
                       <td className="px-4 py-3 text-xs text-muted-foreground">{r.location}</td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{r.provider || "—"}</td>
                       <td className="px-4 py-3">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${statusColors[r.status]}`}>{r.status}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 ${statusColors[r.status]}`}>
+                          {(r.status === "Matching" || r.status === "Pending Match" || r.status === "Matched") && (
+                            <Sparkles className="w-2.5 h-2.5 text-violet-500 flex-shrink-0" />
+                          )}
+                          {r.status}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{r.created}</td>
                       <td className="px-4 py-3">
@@ -187,7 +192,12 @@ export default function Requests() {
                 <div key={status} className="w-64 flex-shrink-0">
                   <div className="flex items-center justify-between mb-2 px-1">
                     <div className="flex items-center gap-2">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${statusColors[status]}`}>{status}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium inline-flex items-center gap-0.5 ${statusColors[status]}`}>
+                        {(status === "Matching" || status === "Pending Match" || status === "Matched") && (
+                          <Sparkles className="w-2 h-2 text-violet-500 flex-shrink-0" />
+                        )}
+                        {status}
+                      </span>
                       <span className="text-xs text-muted-foreground">{items.length}</span>
                     </div>
                   </div>

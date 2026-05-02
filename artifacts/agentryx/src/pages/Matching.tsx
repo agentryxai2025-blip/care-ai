@@ -232,10 +232,7 @@ export default function Matching() {
                           tooltip={STAGE_AI_TOOLTIPS[i] ?? undefined}
                           title={stage.name}
                           side="top"
-                          className={cn(
-                            "w-3 h-3 transition-colors duration-300",
-                            isActive ? "text-violet-500" : isDone ? "text-violet-400" : "text-muted-foreground/25"
-                          )}
+                          className="w-3.5 h-3.5 text-violet-400"
                         />
                       </div>
                     )}

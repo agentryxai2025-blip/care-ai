@@ -21,5 +21,12 @@ fi
 
 echo "Remote 'origin' is set to: ${REMOTE_URL}"
 echo "Pushing branch '${BRANCH}' ..."
-git push "https://${GITHUB_PAT}@github.com/agentryxai2025-blip/care-ai.git" "${BRANCH}:${BRANCH}"
+
+# Use --force-with-lease so Replit is always the source of truth.
+# This handles non-fast-forward situations (e.g. GitHub Actions commits)
+# without blindly overwriting any push another human may have made concurrently.
+git push --force-with-lease \
+  "https://${GITHUB_PAT}@github.com/agentryxai2025-blip/care-ai.git" \
+  "${BRANCH}:${BRANCH}"
+
 echo "Push complete."

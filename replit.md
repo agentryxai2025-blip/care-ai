@@ -25,3 +25,13 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## GitHub Repository
+
+- **Remote**: `https://github.com/agentryxai2025-blip/care-ai`
+- **Branch**: `main`
+- **Status**: Remote `origin` configured and all commits pushed successfully (May 2026).
+- Authentication uses the `GITHUB_PAT` secret (stored in Replit Secrets — never commit to tracked files).
+- The PAT is injected at push-time only: `git push "https://$GITHUB_PAT@github.com/agentryxai2025-blip/care-ai.git" main`
+- The repository was created via the GitHub API (account: `agentryxai2025-blip`) since it did not exist.
+- To push future updates: `bash scripts/push-to-github.sh` (requires `GITHUB_PAT` in environment).

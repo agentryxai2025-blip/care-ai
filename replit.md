@@ -34,4 +34,6 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 - Authentication uses the `GITHUB_PAT` secret (stored in Replit Secrets — never commit to tracked files).
 - The PAT is injected at push-time only: `git push "https://$GITHUB_PAT@github.com/agentryxai2025-blip/care-ai.git" main`
 - The repository was created via the GitHub API (account: `agentryxai2025-blip`) since it did not exist.
-- To push future updates: `bash scripts/push-to-github.sh` (requires `GITHUB_PAT` in environment).
+- To push future updates manually: `bash scripts/push-to-github.sh` (requires `GITHUB_PAT` in environment).
+- **Auto-sync**: `scripts/post-merge.sh` automatically pushes to GitHub after every Replit task merge (when `GITHUB_PAT` is set in Replit Secrets).
+- **CI**: `.github/workflows/ci.yml` runs typecheck on every push to `main` via GitHub Actions.

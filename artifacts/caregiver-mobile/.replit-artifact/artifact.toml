@@ -12,7 +12,7 @@ kind = "mobile"
   [[services]]
   name = "expo"
   paths = [ "/mobile/" ]
-  localPort = 8081
+  localPort = 8082
   ensurePreviewReachable = "/status"
 
   [services.development]
@@ -23,6 +23,5 @@ kind = "mobile"
   run = [ "pnpm", "--filter", "@workspace/caregiver-mobile", "run", "serve" ]
 
   [services.env]
-  PORT = "8081"
+  PORT = "8082"
   BASE_PATH = "/mobile/"
-  

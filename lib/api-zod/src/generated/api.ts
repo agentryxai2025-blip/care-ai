@@ -14,3 +14,148 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary Get dashboard summary
+ */
+export const GetDashboardResponse = zod.object({
+  activeParticipants: zod.number(),
+  openRequests: zod.number(),
+  automationRate: zod.number(),
+  matchedToday: zod.number(),
+  pipeline: zod.array(
+    zod.object({
+      label: zod.string(),
+      count: zod.number(),
+      color: zod.string(),
+    }),
+  ),
+  recentRequests: zod.array(
+    zod.object({
+      id: zod.string(),
+      participant: zod.string(),
+      service: zod.string(),
+      status: zod.string(),
+      provider: zod.string().nullable(),
+      budget: zod.string(),
+      urgency: zod.string(),
+      date: zod.string(),
+      ndisNumber: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary List all participants
+ */
+export const GetParticipantsResponseItem = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  ndisNumber: zod.string(),
+  status: zod.string(),
+  plan: zod.string(),
+  budget: zod.number(),
+  spent: zod.number(),
+  age: zod.number(),
+  primaryGoal: zod.string(),
+  coordinator: zod.string(),
+});
+export const GetParticipantsResponse = zod.array(GetParticipantsResponseItem);
+
+/**
+ * @summary Get a participant by ID
+ */
+export const GetParticipantParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GetParticipantResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  ndisNumber: zod.string(),
+  status: zod.string(),
+  plan: zod.string(),
+  budget: zod.number(),
+  spent: zod.number(),
+  age: zod.number(),
+  primaryGoal: zod.string(),
+  coordinator: zod.string(),
+});
+
+/**
+ * @summary List all service requests
+ */
+export const GetRequestsQueryParams = zod.object({
+  status: zod.coerce.string().optional(),
+});
+
+export const GetRequestsResponseItem = zod.object({
+  id: zod.string(),
+  participant: zod.string(),
+  service: zod.string(),
+  status: zod.string(),
+  provider: zod.string().nullable(),
+  budget: zod.string(),
+  urgency: zod.string(),
+  date: zod.string(),
+  ndisNumber: zod.string(),
+});
+export const GetRequestsResponse = zod.array(GetRequestsResponseItem);
+
+/**
+ * @summary Get a request by ID
+ */
+export const GetRequestParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GetRequestResponse = zod.object({
+  id: zod.string(),
+  participant: zod.string(),
+  service: zod.string(),
+  status: zod.string(),
+  provider: zod.string().nullable(),
+  budget: zod.string(),
+  urgency: zod.string(),
+  date: zod.string(),
+  ndisNumber: zod.string(),
+});
+
+/**
+ * @summary List all providers
+ */
+export const GetProvidersResponseItem = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  abn: zod.string(),
+  category: zod.string(),
+  rating: zod.number(),
+  reviews: zod.number(),
+  status: zod.string(),
+  location: zod.string(),
+  participants: zod.number(),
+  specialties: zod.array(zod.string()),
+  responseTime: zod.string(),
+});
+export const GetProvidersResponse = zod.array(GetProvidersResponseItem);
+
+/**
+ * @summary Get a provider by ID
+ */
+export const GetProviderParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GetProviderResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  abn: zod.string(),
+  category: zod.string(),
+  rating: zod.number(),
+  reviews: zod.number(),
+  status: zod.string(),
+  location: zod.string(),
+  participants: zod.number(),
+  specialties: zod.array(zod.string()),
+  responseTime: zod.string(),
+});

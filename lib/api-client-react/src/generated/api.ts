@@ -13,7 +13,15 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  DashboardSummary,
+  ErrorResponse,
+  GetRequestsParams,
+  HealthStatus,
+  Participant,
+  Provider,
+  ServiceRequest,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
 import type { ErrorType } from "../custom-fetch";
@@ -92,6 +100,586 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get dashboard summary
+ */
+export const getGetDashboardUrl = () => {
+  return `/api/dashboard`;
+};
+
+export const getDashboard = async (
+  options?: RequestInit,
+): Promise<DashboardSummary> => {
+  return customFetch<DashboardSummary>(getGetDashboardUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDashboardQueryKey = () => {
+  return [`/api/dashboard`] as const;
+};
+
+export const getGetDashboardQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDashboard>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboard>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDashboardQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboard>>> = ({
+    signal,
+  }) => getDashboard({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboard>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDashboardQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDashboard>>
+>;
+export type GetDashboardQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get dashboard summary
+ */
+
+export function useGetDashboard<
+  TData = Awaited<ReturnType<typeof getDashboard>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboard>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDashboardQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all participants
+ */
+export const getGetParticipantsUrl = () => {
+  return `/api/participants`;
+};
+
+export const getParticipants = async (
+  options?: RequestInit,
+): Promise<Participant[]> => {
+  return customFetch<Participant[]>(getGetParticipantsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetParticipantsQueryKey = () => {
+  return [`/api/participants`] as const;
+};
+
+export const getGetParticipantsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getParticipants>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getParticipants>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetParticipantsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getParticipants>>> = ({
+    signal,
+  }) => getParticipants({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getParticipants>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetParticipantsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getParticipants>>
+>;
+export type GetParticipantsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all participants
+ */
+
+export function useGetParticipants<
+  TData = Awaited<ReturnType<typeof getParticipants>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getParticipants>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetParticipantsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a participant by ID
+ */
+export const getGetParticipantUrl = (id: string) => {
+  return `/api/participants/${id}`;
+};
+
+export const getParticipant = async (
+  id: string,
+  options?: RequestInit,
+): Promise<Participant> => {
+  return customFetch<Participant>(getGetParticipantUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetParticipantQueryKey = (id: string) => {
+  return [`/api/participants/${id}`] as const;
+};
+
+export const getGetParticipantQueryOptions = <
+  TData = Awaited<ReturnType<typeof getParticipant>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getParticipant>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetParticipantQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getParticipant>>> = ({
+    signal,
+  }) => getParticipant(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getParticipant>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetParticipantQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getParticipant>>
+>;
+export type GetParticipantQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get a participant by ID
+ */
+
+export function useGetParticipant<
+  TData = Awaited<ReturnType<typeof getParticipant>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getParticipant>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetParticipantQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all service requests
+ */
+export const getGetRequestsUrl = (params?: GetRequestsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/requests?${stringifiedParams}`
+    : `/api/requests`;
+};
+
+export const getRequests = async (
+  params?: GetRequestsParams,
+  options?: RequestInit,
+): Promise<ServiceRequest[]> => {
+  return customFetch<ServiceRequest[]>(getGetRequestsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRequestsQueryKey = (params?: GetRequestsParams) => {
+  return [`/api/requests`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetRequestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRequests>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRequestsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRequests>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRequestsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRequests>>> = ({
+    signal,
+  }) => getRequests(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRequests>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRequestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRequests>>
+>;
+export type GetRequestsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all service requests
+ */
+
+export function useGetRequests<
+  TData = Awaited<ReturnType<typeof getRequests>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRequestsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRequests>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRequestsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a request by ID
+ */
+export const getGetRequestUrl = (id: string) => {
+  return `/api/requests/${id}`;
+};
+
+export const getRequest = async (
+  id: string,
+  options?: RequestInit,
+): Promise<ServiceRequest> => {
+  return customFetch<ServiceRequest>(getGetRequestUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRequestQueryKey = (id: string) => {
+  return [`/api/requests/${id}`] as const;
+};
+
+export const getGetRequestQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRequest>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRequest>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRequestQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRequest>>> = ({
+    signal,
+  }) => getRequest(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRequest>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRequestQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRequest>>
+>;
+export type GetRequestQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get a request by ID
+ */
+
+export function useGetRequest<
+  TData = Awaited<ReturnType<typeof getRequest>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRequest>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRequestQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all providers
+ */
+export const getGetProvidersUrl = () => {
+  return `/api/providers`;
+};
+
+export const getProviders = async (
+  options?: RequestInit,
+): Promise<Provider[]> => {
+  return customFetch<Provider[]>(getGetProvidersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProvidersQueryKey = () => {
+  return [`/api/providers`] as const;
+};
+
+export const getGetProvidersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProviders>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getProviders>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProvidersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProviders>>> = ({
+    signal,
+  }) => getProviders({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProviders>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetProvidersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProviders>>
+>;
+export type GetProvidersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all providers
+ */
+
+export function useGetProviders<
+  TData = Awaited<ReturnType<typeof getProviders>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getProviders>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProvidersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a provider by ID
+ */
+export const getGetProviderUrl = (id: string) => {
+  return `/api/providers/${id}`;
+};
+
+export const getProvider = async (
+  id: string,
+  options?: RequestInit,
+): Promise<Provider> => {
+  return customFetch<Provider>(getGetProviderUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProviderQueryKey = (id: string) => {
+  return [`/api/providers/${id}`] as const;
+};
+
+export const getGetProviderQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProvider>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProvider>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProviderQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProvider>>> = ({
+    signal,
+  }) => getProvider(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProvider>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetProviderQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProvider>>
+>;
+export type GetProviderQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get a provider by ID
+ */
+
+export function useGetProvider<
+  TData = Awaited<ReturnType<typeof getProvider>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProvider>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProviderQueryOptions(id, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

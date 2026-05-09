@@ -10,6 +10,14 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Dashboard summary
+  - name: participants
+    description: NDIS participants
+  - name: requests
+    description: Service requests
+  - name: providers
+    description: Service providers
 paths:
   /healthz:
     get:
@@ -24,6 +32,146 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /participants:
+    get:
+      operationId: getParticipants
+      tags: [participants]
+      summary: List all participants
+      responses:
+        "200":
+          description: List of participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Participant"
+
+  /participants/{id}:
+    get:
+      operationId: getParticipant
+      tags: [participants]
+      summary: Get a participant by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Participant details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Participant"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /requests:
+    get:
+      operationId: getRequests
+      tags: [requests]
+      summary: List all service requests
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of service requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceRequest"
+
+  /requests/{id}:
+    get:
+      operationId: getRequest
+      tags: [requests]
+      summary: Get a request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service request details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /providers:
+    get:
+      operationId: getProviders
+      tags: [providers]
+      summary: List all providers
+      responses:
+        "200":
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+
+  /providers/{id}:
+    get:
+      operationId: getProvider
+      tags: [providers]
+      summary: Get a provider by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Provider details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +182,158 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    DashboardSummary:
+      type: object
+      properties:
+        activeParticipants:
+          type: integer
+        openRequests:
+          type: integer
+        automationRate:
+          type: integer
+        matchedToday:
+          type: integer
+        pipeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/PipelineStage"
+        recentRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceRequest"
+      required:
+        - activeParticipants
+        - openRequests
+        - automationRate
+        - matchedToday
+        - pipeline
+        - recentRequests
+
+    PipelineStage:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+        color:
+          type: string
+      required:
+        - label
+        - count
+        - color
+
+    Participant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        ndisNumber:
+          type: string
+        status:
+          type: string
+        plan:
+          type: string
+        budget:
+          type: number
+        spent:
+          type: number
+        age:
+          type: integer
+        primaryGoal:
+          type: string
+        coordinator:
+          type: string
+      required:
+        - id
+        - name
+        - ndisNumber
+        - status
+        - plan
+        - budget
+        - spent
+        - age
+        - primaryGoal
+        - coordinator
+
+    ServiceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        participant:
+          type: string
+        service:
+          type: string
+        status:
+          type: string
+        provider:
+          type: ["string", "null"]
+        budget:
+          type: string
+        urgency:
+          type: string
+        date:
+          type: string
+        ndisNumber:
+          type: string
+      required:
+        - id
+        - participant
+        - service
+        - status
+        - provider
+        - budget
+        - urgency
+        - date
+        - ndisNumber
+
+    Provider:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        abn:
+          type: string
+        category:
+          type: string
+        rating:
+          type: number
+        reviews:
+          type: integer
+        status:
+          type: string
+        location:
+          type: string
+        participants:
+          type: integer
+        specialties:
+          type: array
+          items:
+            type: string
+        responseTime:
+          type: string
+      required:
+        - id
+        - name
+        - abn
+        - category
+        - rating
+        - reviews
+        - status
+        - location
+        - participants
+        - specialties
+        - responseTime

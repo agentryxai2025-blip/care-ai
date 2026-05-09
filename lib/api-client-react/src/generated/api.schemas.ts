@@ -8,3 +8,66 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface PipelineStage {
+  label: string;
+  count: number;
+  color: string;
+}
+
+export interface ServiceRequest {
+  id: string;
+  participant: string;
+  service: string;
+  status: string;
+  /** @nullable */
+  provider: string | null;
+  budget: string;
+  urgency: string;
+  date: string;
+  ndisNumber: string;
+}
+
+export interface DashboardSummary {
+  activeParticipants: number;
+  openRequests: number;
+  automationRate: number;
+  matchedToday: number;
+  pipeline: PipelineStage[];
+  recentRequests: ServiceRequest[];
+}
+
+export interface Participant {
+  id: string;
+  name: string;
+  ndisNumber: string;
+  status: string;
+  plan: string;
+  budget: number;
+  spent: number;
+  age: number;
+  primaryGoal: string;
+  coordinator: string;
+}
+
+export interface Provider {
+  id: string;
+  name: string;
+  abn: string;
+  category: string;
+  rating: number;
+  reviews: number;
+  status: string;
+  location: string;
+  participants: number;
+  specialties: string[];
+  responseTime: string;
+}
+
+export type GetRequestsParams = {
+  status?: string;
+};

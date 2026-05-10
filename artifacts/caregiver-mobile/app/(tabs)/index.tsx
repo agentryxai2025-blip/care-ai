@@ -219,9 +219,16 @@ export default function DashboardScreen() {
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Recent Requests</Text>
           <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
         </View>
-        {dashboard.recentRequests.map((item) => (
-          <RecentRequestRow key={item.id} item={item} />
-        ))}
+        {dashboard.recentRequests.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="document-text-outline" size={36} color={colors.mutedForeground} />
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No recent requests</Text>
+          </View>
+        ) : (
+          dashboard.recentRequests.map((item) => (
+            <RecentRequestRow key={item.id} item={item} />
+          ))
+        )}
       </View>
     </ScrollView>
   );
@@ -420,6 +427,15 @@ const styles = StyleSheet.create({
   },
   requestTime: {
     fontSize: 11,
+    fontFamily: "Inter_400Regular",
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 24,
+    gap: 8,
+  },
+  emptyText: {
+    fontSize: 14,
     fontFamily: "Inter_400Regular",
   },
 });

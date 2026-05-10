@@ -2,12 +2,14 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, ChevronRight, ChevronLeft, Check, User, FileText, Heart, Sparkles,
-  Phone, Mail, MapPin, Calendar, DollarSign, Languages, Shield
+  Phone, Mail, MapPin, Calendar, DollarSign, Languages, Shield, AlertTriangle,
+  Users, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -35,7 +37,30 @@ const ACCESS_NEEDS = [
   "Diabetes management", "None",
 ];
 
-const COORDINATORS = ["Helen Marsh", "Ryan Lee", "Karen Booth", "Lisa Nguyen"];
+// Realistic caseload data — capacity is typically 25–45 active participants per SC
+const COORDINATORS = [
+  { name: "Helen Marsh",  active: 38, max: 45 },
+  { name: "Ryan Lee",     active: 44, max: 45 },
+  { name: "Karen Booth",  active: 22, max: 45 },
+  { name: "Lisa Nguyen",  active: 45, max: 45 },
+];
+
+function coordSlots(c: typeof COORDINATORS[0]) {
+  return c.max - c.active;
+}
+
+function coordStatus(c: typeof COORDINATORS[0]): "full" | "limited" | "available" {
+  const slots = coordSlots(c);
+  if (slots === 0) return "full";
+  if (slots <= 3) return "limited";
+  return "available";
+}
+
+const STATUS_STYLES = {
+  full:      { pill: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",      bar: "bg-red-400" },
+  limited:   { pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400", bar: "bg-amber-400" },
+  available: { pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", bar: "bg-emerald-500" },
+};
 
 type FormData = {
   firstName: string;
@@ -48,7 +73,8 @@ type FormData = {
   genderPref: string;
   ndisNumber: string;
   planType: string;
-  coordinator: string;
+  coordinator: string;         // assigned coordinator (may be empty = assign later)
+  coordinatorPref: string;     // preferred coordinator note (if first choice is full)
   budgetTotal: string;
   planStart: string;
   planEnd: string;
@@ -61,8 +87,8 @@ type FormData = {
 const emptyForm: FormData = {
   firstName: "", lastName: "", age: "", suburb: "", phone: "", email: "",
   language: "English", genderPref: "No preference",
-  ndisNumber: "", planType: "", coordinator: "", budgetTotal: "",
-  planStart: "", planEnd: "", disabilityType: "",
+  ndisNumber: "", planType: "", coordinator: "", coordinatorPref: "",
+  budgetTotal: "", planStart: "", planEnd: "", disabilityType: "",
   services: [], accessNeeds: [], notes: "",
 };
 
@@ -96,7 +122,7 @@ export default function AddParticipantWizard({ open, onClose, onComplete }: Prop
         name: `${form.firstName} ${form.lastName}`,
         ndis_number: form.ndisNumber || ndisRef.current,
         plan_type: form.planType || "Plan-managed",
-        support_coordinator: form.coordinator || COORDINATORS[0],
+        support_coordinator: form.coordinator || "Unassigned",
         plan_budget_total: parseInt(form.budgetTotal) || 50000,
         plan_budget_spent: 0,
         status: "Active",
@@ -115,9 +141,12 @@ export default function AddParticipantWizard({ open, onClose, onComplete }: Prop
 
   const canNext = () => {
     if (step === 0) return form.firstName.trim() && form.lastName.trim() && form.suburb.trim();
-    if (step === 1) return form.planType && form.coordinator;
+    if (step === 1) return !!form.planType; // coordinator is optional — can assign later
     return true;
   };
+
+  const selectedCoord = COORDINATORS.find(c => c.name === form.coordinator);
+  const selectedStatus = selectedCoord ? coordStatus(selectedCoord) : null;
 
   if (!open) return null;
 
@@ -168,7 +197,7 @@ export default function AddParticipantWizard({ open, onClose, onComplete }: Prop
         </div>
 
         {/* Body */}
-        <div className="p-5 max-h-[55vh] overflow-y-auto">
+        <div className="p-5 max-h-[60vh] overflow-y-auto">
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div key="s0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
@@ -245,28 +274,122 @@ export default function AddParticipantWizard({ open, onClose, onComplete }: Prop
                     <Input className="pl-8 h-9 text-sm font-mono" placeholder="Auto-generated if blank" value={form.ndisNumber} onChange={e => update("ndisNumber", e.target.value)} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Plan Type *</Label>
-                    <Select value={form.planType} onValueChange={v => update("planType", v)}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select type" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="NDIA-managed">NDIA-managed</SelectItem>
-                        <SelectItem value="Plan-managed">Plan-managed</SelectItem>
-                        <SelectItem value="Self-managed">Self-managed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Support Coordinator *</Label>
-                    <Select value={form.coordinator} onValueChange={v => update("coordinator", v)}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Assign coordinator" /></SelectTrigger>
-                      <SelectContent>
-                        {COORDINATORS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Plan Type *</Label>
+                  <Select value={form.planType} onValueChange={v => update("planType", v)}>
+                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NDIA-managed">NDIA-managed</SelectItem>
+                      <SelectItem value="Plan-managed">Plan-managed</SelectItem>
+                      <SelectItem value="Self-managed">Self-managed</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {/* Coordinator assignment — optional, with capacity display */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs flex items-center gap-1">
+                      <Users className="w-3 h-3" /> Support Coordinator
+                      <span className="text-muted-foreground font-normal ml-1">— optional, can assign later</span>
+                    </Label>
+                  </div>
+
+                  {/* Coordinator cards */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Assign later option */}
+                    <button
+                      onClick={() => update("coordinator", "")}
+                      className={cn(
+                        "text-left p-2.5 rounded-lg border text-xs transition-all",
+                        !form.coordinator
+                          ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-500"
+                          : "border-border hover:border-muted-foreground/40"
+                      )}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Clock className="w-3 h-3 text-muted-foreground" />
+                        <span className="font-medium text-foreground">Assign later</span>
+                      </div>
+                      <p className="text-muted-foreground text-[10px] leading-tight">Participant registered as Unassigned — coordinator allocated by manager</p>
+                    </button>
+
+                    {COORDINATORS.map(c => {
+                      const status = coordStatus(c);
+                      const slots = coordSlots(c);
+                      const styles = STATUS_STYLES[status];
+                      const isSelected = form.coordinator === c.name;
+                      return (
+                        <button
+                          key={c.name}
+                          onClick={() => update("coordinator", c.name)}
+                          className={cn(
+                            "text-left p-2.5 rounded-lg border text-xs transition-all",
+                            isSelected
+                              ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-500"
+                              : status === "full"
+                              ? "border-border opacity-60 hover:opacity-80"
+                              : "border-border hover:border-muted-foreground/40"
+                          )}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="font-medium text-foreground truncate">{c.name}</span>
+                            <span className={cn("text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1", styles.pill)}>
+                              {status === "full" ? "Full" : `${slots} free`}
+                            </span>
+                          </div>
+                          {/* Caseload bar */}
+                          <div className="h-1 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={cn("h-full rounded-full transition-all", styles.bar)}
+                              style={{ width: `${(c.active / c.max) * 100}%` }}
+                            />
+                          </div>
+                          <p className="text-muted-foreground text-[10px] mt-1">{c.active}/{c.max} participants</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Warning when full coordinator is selected */}
+                  {selectedStatus === "full" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                      className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs"
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-amber-800 dark:text-amber-300">{form.coordinator} is at full capacity</p>
+                        <p className="text-amber-700 dark:text-amber-400 mt-0.5">This assignment will flag for manager review. Record the participant's preference below and a manager will arrange a suitable coordinator.</p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Warning when limited slots */}
+                  {selectedStatus === "limited" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                      className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-800/50 text-xs"
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-amber-700 dark:text-amber-400">{form.coordinator} has only {coordSlots(selectedCoord!)} slot{coordSlots(selectedCoord!) !== 1 ? "s" : ""} remaining — consider Karen Booth who has more availability.</p>
+                    </motion.div>
+                  )}
+
+                  {/* Preference note — shown when full coordinator selected, or explicitly requested */}
+                  {(selectedStatus === "full") && (
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Participant's preference note (optional)</Label>
+                      <Input
+                        className="h-9 text-sm"
+                        placeholder="e.g. Referred by Helen, has existing rapport"
+                        value={form.coordinatorPref}
+                        onChange={e => update("coordinatorPref", e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-1.5">
                   <Label className="text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> Annual Budget (AUD)</Label>
                   <Input className="h-9 text-sm" type="number" placeholder="e.g. 75000" value={form.budgetTotal} onChange={e => update("budgetTotal", e.target.value)} />
@@ -375,11 +498,22 @@ export default function AddParticipantWizard({ open, onClose, onComplete }: Prop
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs pt-1 border-t border-border">
                         <Row label="Plan Type" val={form.planType || "Plan-managed"} />
-                        <Row label="Coordinator" val={form.coordinator || COORDINATORS[0]} />
+                        <Row
+                          label="Coordinator"
+                          val={form.coordinator || "Unassigned"}
+                          warn={selectedStatus === "full"}
+                          warnText="At capacity — flagged for manager review"
+                        />
                         <Row label="NDIS No." val={form.ndisNumber || ndisRef.current} />
                         <Row label="Annual Budget" val={form.budgetTotal ? `$${parseInt(form.budgetTotal).toLocaleString()}` : "TBD"} />
                         <Row label="Language" val={form.language} />
                         <Row label="Gender Pref." val={form.genderPref} />
+                        {form.coordinatorPref && (
+                          <div className="col-span-2">
+                            <span className="text-muted-foreground">Coord. Preference Note: </span>
+                            <span className="font-medium text-foreground">{form.coordinatorPref}</span>
+                          </div>
+                        )}
                         {form.services.length > 0 && (
                           <div className="col-span-2">
                             <span className="text-muted-foreground">Services: </span>
@@ -394,6 +528,12 @@ export default function AddParticipantWizard({ open, onClose, onComplete }: Prop
                         )}
                       </div>
                     </div>
+                    {!form.coordinator && (
+                      <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-xs">
+                        <Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-blue-700 dark:text-blue-300">No coordinator assigned — this participant will appear in the manager's unassigned queue for allocation.</p>
+                      </div>
+                    )}
                   </>
                 )}
               </motion.div>
@@ -427,11 +567,12 @@ export default function AddParticipantWizard({ open, onClose, onComplete }: Prop
   );
 }
 
-function Row({ label, val }: { label: string; val: string }) {
+function Row({ label, val, warn, warnText }: { label: string; val: string; warn?: boolean; warnText?: string }) {
   return (
     <div>
       <span className="text-muted-foreground">{label}: </span>
-      <span className="font-medium text-foreground">{val}</span>
+      <span className={cn("font-medium", warn ? "text-amber-600 dark:text-amber-400" : "text-foreground")}>{val}</span>
+      {warn && warnText && <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">{warnText}</p>}
     </div>
   );
 }

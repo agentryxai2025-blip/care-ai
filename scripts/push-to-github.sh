@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Push current branch to the GitHub remote using GITHUB_PAT for authentication.
+# Replit is the canonical source of truth. GitHub is a mirror.
 # Usage: GITHUB_PAT=<token> bash scripts/push-to-github.sh
 set -euo pipefail
 
@@ -21,17 +22,11 @@ else
 fi
 
 echo "Remote 'origin' is set to: ${REMOTE_URL}"
-
-# Fetch remote tracking refs so --force-with-lease has accurate stale-check data.
-# Redirect stderr to suppress the PAT from appearing in logs.
-echo "Fetching remote refs..."
-git fetch "${AUTH_URL}" "${BRANCH}:refs/remotes/origin/${BRANCH}" 2>/dev/null || true
-
 echo "Pushing branch '${BRANCH}' ..."
-# --force-with-lease is safe: Replit is the source of truth, but this prevents
-# accidentally overwriting a push made by another user outside of Replit.
-git push --force-with-lease \
-  "${AUTH_URL}" \
-  "${BRANCH}:${BRANCH}"
+
+# Force push — Replit is the source of truth; GitHub is a read mirror.
+# GitHub Actions CI commits (status badges, etc.) are expected to diverge;
+# we always want Replit's history to win.
+git push --force "${AUTH_URL}" "${BRANCH}:${BRANCH}"
 
 echo "Push complete."

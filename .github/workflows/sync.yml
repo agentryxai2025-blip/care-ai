@@ -1,0 +1,30 @@
+name: GitHub Sync
+
+# This workflow fires only when a push reaches GitHub successfully.
+# It provides the live status badge shown in replit.md.
+#
+# NOTE: This workflow CANNOT detect a failed Replit→GitHub push — if the
+# push never happens (e.g. GITHUB_PAT expired), no push event is emitted
+# and this workflow does not run. Proactive failure notifications are
+# handled by scripts/post-merge.sh via Slack webhook (SLACK_WEBHOOK_URL).
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync-status:
+    name: Sync Status
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Confirm sync
+        run: |
+          echo "Push from Replit to GitHub succeeded."
+          echo "Commit : ${{ github.sha }}"
+          echo "Actor  : ${{ github.actor }}"
+          echo "Time   : $(date -u)"

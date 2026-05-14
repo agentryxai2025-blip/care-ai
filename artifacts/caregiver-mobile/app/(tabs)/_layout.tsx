@@ -5,9 +5,24 @@ import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/context/auth";
+
+function LogoutButton() {
+  const colors = useColors();
+  const { logout } = useAuth();
+  return (
+    <Pressable
+      onPress={logout}
+      style={{ paddingHorizontal: 16, paddingVertical: 8 }}
+      testID="logout-button"
+    >
+      <Feather name="log-out" size={20} color={colors.mutedForeground} />
+    </Pressable>
+  );
+}
 
 function NativeTabLayout() {
   return (
@@ -27,6 +42,10 @@ function NativeTabLayout() {
       <NativeTabs.Trigger name="providers">
         <Icon sf={{ default: "building.2", selected: "building.2.fill" }} />
         <Label>Providers</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
+        <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -65,12 +84,14 @@ function ClassicTabLayout() {
               style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]}
             />
           ) : null,
+        headerRight: () => <LogoutButton />,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Dashboard",
+          headerShown: true,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="house" tintColor={color} size={24} />
@@ -83,6 +104,7 @@ function ClassicTabLayout() {
         name="requests"
         options={{
           title: "Requests",
+          headerShown: true,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="doc.text" tintColor={color} size={24} />
@@ -95,6 +117,7 @@ function ClassicTabLayout() {
         name="participants"
         options={{
           title: "Participants",
+          headerShown: true,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="person.2" tintColor={color} size={24} />
@@ -107,11 +130,26 @@ function ClassicTabLayout() {
         name="providers"
         options={{
           title: "Providers",
+          headerShown: true,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="building.2" tintColor={color} size={24} />
             ) : (
               <Ionicons name="business-outline" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          headerShown: true,
+          headerRight: () => <LogoutButton />,
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="person.circle" tintColor={color} size={24} />
+            ) : (
+              <Feather name="user" size={22} color={color} />
             ),
         }}
       />

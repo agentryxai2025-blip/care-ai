@@ -5,32 +5,187 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
 import type {
+  AuthLoginResponse,
+  Caregiver,
   DashboardSummary,
   ErrorResponse,
   GetRequestsParams,
   HealthStatus,
+  LoginRequest,
   Participant,
   Provider,
   ServiceRequest,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Login with email and password
+ */
+export const getLoginUrl = () => {
+  return `/api/auth/login`;
+};
+
+export const login = async (
+  loginRequest: LoginRequest,
+  options?: RequestInit,
+): Promise<AuthLoginResponse> => {
+  return customFetch<AuthLoginResponse>(getLoginUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(loginRequest),
+  });
+};
+
+export const getLoginMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof login>>,
+    TError,
+    { data: BodyType<LoginRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof login>>,
+  TError,
+  { data: BodyType<LoginRequest> },
+  TContext
+> => {
+  const mutationKey = ["login"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof login>>,
+    { data: BodyType<LoginRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return login(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof login>>
+>;
+export type LoginMutationBody = BodyType<LoginRequest>;
+export type LoginMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Login with email and password
+ */
+export const useLogin = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof login>>,
+    TError,
+    { data: BodyType<LoginRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof login>>,
+  TError,
+  { data: BodyType<LoginRequest> },
+  TContext
+> => {
+  return useMutation(getLoginMutationOptions(options));
+};
+
+/**
+ * @summary Get current authenticated caregiver
+ */
+export const getGetMeUrl = () => {
+  return `/api/auth/me`;
+};
+
+export const getMe = async (options?: RequestInit): Promise<Caregiver> => {
+  return customFetch<Caregiver>(getGetMeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMeQueryKey = () => {
+  return [`/api/auth/me`] as const;
+};
+
+export const getGetMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMe>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMe>>> = ({
+    signal,
+  }) => getMe({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMe>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>;
+export type GetMeQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get current authenticated caregiver
+ */
+
+export function useGetMe<
+  TData = Awaited<ReturnType<typeof getMe>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMeQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * Returns server health status
@@ -109,7 +264,7 @@ export function useHealthCheck<
 }
 
 /**
- * @summary Get dashboard summary
+ * @summary Get dashboard summary scoped to the authenticated caregiver
  */
 export const getGetDashboardUrl = () => {
   return `/api/dashboard`;
@@ -130,7 +285,7 @@ export const getGetDashboardQueryKey = () => {
 
 export const getGetDashboardQueryOptions = <
   TData = Awaited<ReturnType<typeof getDashboard>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getDashboard>>,
@@ -157,15 +312,15 @@ export const getGetDashboardQueryOptions = <
 export type GetDashboardQueryResult = NonNullable<
   Awaited<ReturnType<typeof getDashboard>>
 >;
-export type GetDashboardQueryError = ErrorType<unknown>;
+export type GetDashboardQueryError = ErrorType<ErrorResponse>;
 
 /**
- * @summary Get dashboard summary
+ * @summary Get dashboard summary scoped to the authenticated caregiver
  */
 
 export function useGetDashboard<
   TData = Awaited<ReturnType<typeof getDashboard>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getDashboard>>,
@@ -184,7 +339,7 @@ export function useGetDashboard<
 }
 
 /**
- * @summary List all participants
+ * @summary List participants assigned to the authenticated caregiver
  */
 export const getGetParticipantsUrl = () => {
   return `/api/participants`;
@@ -205,7 +360,7 @@ export const getGetParticipantsQueryKey = () => {
 
 export const getGetParticipantsQueryOptions = <
   TData = Awaited<ReturnType<typeof getParticipants>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getParticipants>>,
@@ -232,15 +387,15 @@ export const getGetParticipantsQueryOptions = <
 export type GetParticipantsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getParticipants>>
 >;
-export type GetParticipantsQueryError = ErrorType<unknown>;
+export type GetParticipantsQueryError = ErrorType<ErrorResponse>;
 
 /**
- * @summary List all participants
+ * @summary List participants assigned to the authenticated caregiver
  */
 
 export function useGetParticipants<
   TData = Awaited<ReturnType<typeof getParticipants>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getParticipants>>,
@@ -259,7 +414,7 @@ export function useGetParticipants<
 }
 
 /**
- * @summary Get a participant by ID
+ * @summary Get a participant by ID (must be assigned to the caregiver)
  */
 export const getGetParticipantUrl = (id: string) => {
   return `/api/participants/${id}`;
@@ -319,7 +474,7 @@ export type GetParticipantQueryResult = NonNullable<
 export type GetParticipantQueryError = ErrorType<ErrorResponse>;
 
 /**
- * @summary Get a participant by ID
+ * @summary Get a participant by ID (must be assigned to the caregiver)
  */
 
 export function useGetParticipant<
@@ -346,7 +501,7 @@ export function useGetParticipant<
 }
 
 /**
- * @summary List all service requests
+ * @summary List service requests for the caregiver's assigned participants
  */
 export const getGetRequestsUrl = (params?: GetRequestsParams) => {
   const normalizedParams = new URLSearchParams();
@@ -380,7 +535,7 @@ export const getGetRequestsQueryKey = (params?: GetRequestsParams) => {
 
 export const getGetRequestsQueryOptions = <
   TData = Awaited<ReturnType<typeof getRequests>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(
   params?: GetRequestsParams,
   options?: {
@@ -410,15 +565,15 @@ export const getGetRequestsQueryOptions = <
 export type GetRequestsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getRequests>>
 >;
-export type GetRequestsQueryError = ErrorType<unknown>;
+export type GetRequestsQueryError = ErrorType<ErrorResponse>;
 
 /**
- * @summary List all service requests
+ * @summary List service requests for the caregiver's assigned participants
  */
 
 export function useGetRequests<
   TData = Awaited<ReturnType<typeof getRequests>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(
   params?: GetRequestsParams,
   options?: {
@@ -440,7 +595,7 @@ export function useGetRequests<
 }
 
 /**
- * @summary Get a request by ID
+ * @summary Get a request by ID (must belong to an assigned participant)
  */
 export const getGetRequestUrl = (id: string) => {
   return `/api/requests/${id}`;
@@ -500,7 +655,7 @@ export type GetRequestQueryResult = NonNullable<
 export type GetRequestQueryError = ErrorType<ErrorResponse>;
 
 /**
- * @summary Get a request by ID
+ * @summary Get a request by ID (must belong to an assigned participant)
  */
 
 export function useGetRequest<
@@ -548,7 +703,7 @@ export const getGetProvidersQueryKey = () => {
 
 export const getGetProvidersQueryOptions = <
   TData = Awaited<ReturnType<typeof getProviders>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getProviders>>,
@@ -575,7 +730,7 @@ export const getGetProvidersQueryOptions = <
 export type GetProvidersQueryResult = NonNullable<
   Awaited<ReturnType<typeof getProviders>>
 >;
-export type GetProvidersQueryError = ErrorType<unknown>;
+export type GetProvidersQueryError = ErrorType<ErrorResponse>;
 
 /**
  * @summary List all providers
@@ -583,7 +738,7 @@ export type GetProvidersQueryError = ErrorType<unknown>;
 
 export function useGetProviders<
   TData = Awaited<ReturnType<typeof getProviders>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<ErrorResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getProviders>>,

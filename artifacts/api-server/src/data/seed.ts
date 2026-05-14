@@ -289,14 +289,17 @@ export const PROVIDERS: Provider[] = [
   },
 ];
 
-export function getDashboardSummary(): DashboardSummary {
-  const activeParticipants = PARTICIPANTS.filter((p) => p.status === "Active").length;
-  const openRequests = REQUESTS.filter(
+export function getDashboardSummary(
+  participants: Participant[] = PARTICIPANTS,
+  requests: ServiceRequest[] = REQUESTS,
+): DashboardSummary {
+  const activeParticipants = participants.filter((p) => p.status === "Active").length;
+  const openRequests = requests.filter(
     (r) => r.status !== "Completed" && r.status !== "Active"
   ).length;
 
   const statusCounts: Record<string, number> = {};
-  for (const r of REQUESTS) {
+  for (const r of requests) {
     statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1;
   }
 
@@ -315,7 +318,7 @@ export function getDashboardSummary(): DashboardSummary {
     color: PIPELINE_COLORS[label] ?? "#64748b",
   }));
 
-  const recentRequests = REQUESTS.slice(0, 4);
+  const recentRequests = requests.slice(0, 4);
 
   return {
     activeParticipants,

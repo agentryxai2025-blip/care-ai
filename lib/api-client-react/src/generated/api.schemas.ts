@@ -5,6 +5,24 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface Caregiver {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  participantIds: string[];
+}
+
+export interface AuthLoginResponse {
+  token: string;
+  caregiver: Caregiver;
+}
+
 export interface HealthStatus {
   status: string;
 }

@@ -6,10 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./authLoginResponse";
+export * from "./caregiver";
 export * from "./dashboardSummary";
 export * from "./errorResponse";
 export * from "./getRequestsParams";
 export * from "./healthStatus";
+export * from "./loginRequest";
 export * from "./participant";
 export * from "./pipelineStage";
 export * from "./provider";

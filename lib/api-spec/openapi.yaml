@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
   - name: dashboard
     description: Dashboard summary
   - name: participants
@@ -19,6 +21,51 @@ tags:
   - name: providers
     description: Service providers
 paths:
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthLoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated caregiver
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current caregiver profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Caregiver"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /healthz:
     get:
       operationId: healthCheck
@@ -37,35 +84,53 @@ paths:
     get:
       operationId: getDashboard
       tags: [dashboard]
-      summary: Get dashboard summary
+      summary: Get dashboard summary scoped to the authenticated caregiver
+      security:
+        - bearerAuth: []
       responses:
         "200":
-          description: Dashboard summary data
+          description: Dashboard summary data filtered to the caregiver's assigned participants
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /participants:
     get:
       operationId: getParticipants
       tags: [participants]
-      summary: List all participants
+      summary: List participants assigned to the authenticated caregiver
+      security:
+        - bearerAuth: []
       responses:
         "200":
-          description: List of participants
+          description: List of participants assigned to the caregiver
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/Participant"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /participants/{id}:
     get:
       operationId: getParticipant
       tags: [participants]
-      summary: Get a participant by ID
+      summary: Get a participant by ID (must be assigned to the caregiver)
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -79,6 +144,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Participant"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied — participant not assigned to this caregiver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Not found
           content:
@@ -90,7 +167,9 @@ paths:
     get:
       operationId: getRequests
       tags: [requests]
-      summary: List all service requests
+      summary: List service requests for the caregiver's assigned participants
+      security:
+        - bearerAuth: []
       parameters:
         - name: status
           in: query
@@ -99,19 +178,27 @@ paths:
             type: string
       responses:
         "200":
-          description: List of service requests
+          description: List of service requests filtered to the caregiver's assigned participants
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/ServiceRequest"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /requests/{id}:
     get:
       operationId: getRequest
       tags: [requests]
-      summary: Get a request by ID
+      summary: Get a request by ID (must belong to an assigned participant)
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -125,6 +212,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ServiceRequest"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Not found
           content:
@@ -137,6 +230,8 @@ paths:
       operationId: getProviders
       tags: [providers]
       summary: List all providers
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: List of providers
@@ -146,12 +241,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Provider"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /providers/{id}:
     get:
       operationId: getProvider
       tags: [providers]
       summary: Get a provider by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -165,6 +268,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Provider"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Not found
           content:
@@ -173,7 +282,56 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    Caregiver:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        participantIds:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - email
+        - role
+        - participantIds
+
+    AuthLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        caregiver:
+          $ref: "#/components/schemas/Caregiver"
+      required:
+        - token
+        - caregiver
+
     HealthStatus:
       type: object
       properties:

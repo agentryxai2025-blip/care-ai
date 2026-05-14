@@ -8,6 +8,36 @@
 import * as zod from "zod";
 
 /**
+ * @summary Login with email and password
+ */
+export const LoginBody = zod.object({
+  email: zod.string(),
+  password: zod.string(),
+});
+
+export const LoginResponse = zod.object({
+  token: zod.string(),
+  caregiver: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    email: zod.string(),
+    role: zod.string(),
+    participantIds: zod.array(zod.string()),
+  }),
+});
+
+/**
+ * @summary Get current authenticated caregiver
+ */
+export const GetMeResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  email: zod.string(),
+  role: zod.string(),
+  participantIds: zod.array(zod.string()),
+});
+
+/**
  * Returns server health status
  * @summary Health check
  */
@@ -16,7 +46,7 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * @summary Get dashboard summary
+ * @summary Get dashboard summary scoped to the authenticated caregiver
  */
 export const GetDashboardResponse = zod.object({
   activeParticipants: zod.number(),
@@ -46,7 +76,7 @@ export const GetDashboardResponse = zod.object({
 });
 
 /**
- * @summary List all participants
+ * @summary List participants assigned to the authenticated caregiver
  */
 export const GetParticipantsResponseItem = zod.object({
   id: zod.string(),
@@ -63,7 +93,7 @@ export const GetParticipantsResponseItem = zod.object({
 export const GetParticipantsResponse = zod.array(GetParticipantsResponseItem);
 
 /**
- * @summary Get a participant by ID
+ * @summary Get a participant by ID (must be assigned to the caregiver)
  */
 export const GetParticipantParams = zod.object({
   id: zod.coerce.string(),
@@ -83,7 +113,7 @@ export const GetParticipantResponse = zod.object({
 });
 
 /**
- * @summary List all service requests
+ * @summary List service requests for the caregiver's assigned participants
  */
 export const GetRequestsQueryParams = zod.object({
   status: zod.coerce.string().optional(),
@@ -103,7 +133,7 @@ export const GetRequestsResponseItem = zod.object({
 export const GetRequestsResponse = zod.array(GetRequestsResponseItem);
 
 /**
- * @summary Get a request by ID
+ * @summary Get a request by ID (must belong to an assigned participant)
  */
 export const GetRequestParams = zod.object({
   id: zod.coerce.string(),
